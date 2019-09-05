@@ -1,6 +1,6 @@
-#!/usr/bin/python2
+#!/usr/bin/env python2
 # -*- coding: utf-8 -*-
-# Requirements: Python 2.7+
+# Requirements: Python 2.6+
 """Create or update a tarball-based worker node client installation on a
 remote host from a hosted CE.
 
@@ -16,12 +16,13 @@ the remote host.
 """
 
 from __future__ import print_function
-import argparse
 import contextlib
 import logging
+from optparse import OptionParser
 import os
 import shutil
 import subprocess
+from subprocess import CalledProcessError, Popen, PIPE, STDOUT
 import sys
 import tempfile
 
@@ -105,15 +106,16 @@ def update_crls(osgrun, cert_dir):
     command += ["--parallelism", "5"]
 
     output = None
-    try:
-        output = subprocess.check_output(command, stderr=subprocess.STDOUT)
-    except subprocess.CalledProcessError as err:
+    proc = Popen(command, stdout=PIPE, stderr=STDOUT)
+    output, _ = proc.communicate()
+    if proc.returncode != 0:
         if output and ("CRL verification failed" in output or "Download error" in output):
             # These errors aren't actually fatal; we'll send a less alarming
             # notification about them.
             log.info(output)
         else:
-            raise
+            log.error(output)
+            raise Error("fetch-crl failed with error code %d" % proc.returncode)
 
 
 def rsync_upload(srcdir, destuser, desthost, destdir, ssh_key=None):
@@ -133,21 +135,30 @@ def rsync_upload(srcdir, destuser, desthost, destdir, ssh_key=None):
     newdir = "%s~new~" % destdir
     srcdir = srcdir.rstrip("/") + "/"  # exactly 1 trailing slash
 
-    if subprocess.check_output(ssh +
-            [desthost, "[[ -e %s ]] || echo missing" % shlex_quote(destdir)]).rstrip() == "missing":
-        log.info("rsyncing entire WN client to %s:%s", desthost, destdir)
-        # If remote dir is missing then just upload and return
-        try:
+    errstr = "Error rsyncing to remote host %s:%s: " % (desthost, destdir)
+    try:
+        proc = Popen(
+            ssh + [desthost, "[[ -e %s ]] || echo missing" % shlex_quote(destdir)],
+            stdout=PIPE,
+        )
+    except OSError as e:
+        raise Error(errstr + str(e))
+    output, _ = proc.communicate()
+    if proc.returncode != 0:
+        log.error(output)
+        raise Error(errstr + "rsync exited with %d" % proc.returncode)
+
+    try:
+        if output.rstrip() == "missing":
+            log.info("rsyncing entire WN client to %s:%s", desthost, destdir)
+            # If remote dir is missing then just upload and return
             subprocess.check_call(["rsync", "-e", " ".join(ssh),
                                    "-qaz",
                                    srcdir,
                                    "%s:%s" % (desthost, destdir)])
             return
-        except EnvironmentError as e:
-            raise Error("Error rsyncing to remote host %s:%s: %s" % (desthost, destdir, e))
 
-    # Otherwise, upload to newdir
-    try:
+        # Otherwise, upload to newdir
         log.info("rsyncing WN client changes to %s:%s", desthost, newdir)
         subprocess.check_call(["rsync", "-e", " ".join(ssh),
                                "-qaz",
@@ -155,8 +166,8 @@ def rsync_upload(srcdir, destuser, desthost, destdir, ssh_key=None):
                                "--delete-before",
                                srcdir,
                                "%s:%s" % (desthost, newdir)])
-    except EnvironmentError as e:
-        raise Error("Error rsyncing to remote host: %s:%s: %s" % (desthost, newdir, e))
+    except (OSError, CalledProcessError) as e:
+        raise Error(errstr + str(e))
 
     # then rename destdir to olddir and newdir to destdir
     try:
@@ -167,7 +178,7 @@ def rsync_upload(srcdir, destuser, desthost, destdir, ssh_key=None):
              "mv {1} {0} && "
              "mv {2} {1}".format(
                 shlex_quote(olddir), shlex_quote(destdir), shlex_quote(newdir))])
-    except EnvironmentError as e:
+    except (OSError, CalledProcessError) as e:
         raise Error("Error renaming remote directories: %s" % e)
 
 
@@ -193,33 +204,35 @@ def working_dir(*args, **kwargs):
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
+    parser = OptionParser(usage="usage: %prog [options] remote_host", description=__doc__)
+    parser.add_option(
         "--upstream-url",
         default="https://repo.opensciencegrid.org/tarball-install/3.4/osg-wn-client-latest.el7.x86_64.tar.gz",
-        help="The URL for the WN tarball file. Default: %(default)s",
+        help="URL for the WN tarball file. [default: %default]",
     )
-    parser.add_argument("--remote-user", help="The remote user to use for rsync and ssh. No default.")
-    parser.add_argument(
+    parser.add_option("--remote-user", help="remote user to use for rsync and ssh")
+    parser.add_option(
         "--remote-dir",
         default="/home/bosco/osg-wn-client",
-        help="The remote directory the WN client will be placed in. Default: %(default)s",
+        help="remote directory the WN client will be placed in. [default: %d]",
     )
-    parser.add_argument("--ssh-key", help="The SSH key to use to log in with. No default.")
-    parser.add_argument("remote_host", help="The host to upload the WN client to.")
-    args = parser.parse_args()
+    parser.add_option("--ssh-key", help="SSH key to use to log in with")
+    opts, args = parser.parse_args()
+    if len(args) != 1:
+        parser.error("incorrect number of arguments")
+    remote_host = args[0]
 
     # check if rsync is installed and working
     try:
         subprocess.check_call(["rsync", "--version"], stdout=devnull)
-    except EnvironmentError as e:
+    except (CalledProcessError, EnvironmentError) as e:
         log.error("Error invoking rsync: %s", e)
         return 1
 
     with working_dir() as wd:
         try:
             log.info("Downloading WN tarball")
-            download_to_file(args.upstream_url, "osg-wn-client.tar.gz")
+            download_to_file(opts.upstream_url, "osg-wn-client.tar.gz")
 
             os.mkdir("deploy")
             subprocess.check_call(["tar", "-C", "deploy", "-xzf", "osg-wn-client.tar.gz"])
@@ -232,7 +245,7 @@ def main():
 
             log.info("Setting up tarball dirs")
             subprocess.check_call([os.path.join(deploy_client_dir, "osg/osg-post-install"),
-                                   "-f", args.remote_dir])
+                                   "-f", opts.remote_dir])
             subprocess.check_call([os.path.join(fetch_client_dir, "osg/osg-post-install")])
             osgrun = os.path.join(fetch_client_dir, "osgrun")
 
@@ -242,8 +255,8 @@ def main():
             update_crls(osgrun, cert_dir)
 
             log.info("Uploading")
-            rsync_upload(deploy_client_dir, args.remote_user, args.remote_host, args.remote_dir, args.ssh_key)
-        except Error as e:
+            rsync_upload(deploy_client_dir, opts.remote_user, remote_host, opts.remote_dir, opts.ssh_key)
+        except (EnvironmentError, CalledProcessError, Error) as e:
             log.error(e)
             return 1
 
