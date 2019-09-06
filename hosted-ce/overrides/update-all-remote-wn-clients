@@ -1,0 +1,140 @@
+#!/usr/bin/env python2
+from __future__ import print_function
+import datetime
+import logging
+import pwd
+from optparse import OptionParser
+import os
+import re
+from subprocess import Popen, STDOUT
+import sys
+import time
+
+from six.moves import configparser
+
+
+CONFIG_PATH = "/etc/hosted-ces.ini"
+LOG_DIR = "/var/log/updatewn"
+
+
+log = logging.getLogger(__name__)
+
+
+class Error(Exception):
+    pass
+
+
+def call_updater(cfg, section, updater_script, log_dir):
+    """Call a single instance of the updater for a config section."""
+    if re.search(r"[^A-Za-z0-9_-]", section):
+        raise Error(
+            "%s: Invalid section name: must consist of letters, numbers, `_` or `-`"
+            % section
+        )
+
+    def safe_get(option):
+        try:
+            return cfg.get(section, option)
+        except (configparser.NoSectionError, configparser.NoOptionError):
+            return
+
+    local_user = safe_get("local_user")
+    remote_host = safe_get("remote_host")
+    upstream_url = safe_get("upstream_url")
+    remote_user = safe_get("remote_user")
+    remote_dir = safe_get("remote_dir")
+
+    if not local_user:
+        raise Error("%s: Missing required option local_user" % section)
+    if not remote_host:
+        raise Error("%s: Missing required option remote_host" % section)
+
+    try:
+        local_home = pwd.getpwnam(local_user)[5]
+    except KeyError:
+        raise Error("%s: local_user %s does not exist" % (section, local_user))
+
+    cmd = [updater_script, remote_host]
+    if upstream_url:
+        cmd.append("--upstream-url=%s" % upstream_url)
+    if remote_user:
+        cmd.append("--remote-user=%s" % remote_user)
+    if remote_dir:
+        cmd.append("--remote-dir=%s" % remote_dir)
+
+    logfile = open(os.path.join(log_dir, section), "ab")
+    logfile.write(b"%s %s: %r\n" % (datetime.datetime.now(), local_user, cmd))
+    proc = Popen(
+        ["sudo", "-H", "-u", local_user] + cmd,
+        stdout=logfile,
+        stderr=STDOUT,
+        cwd=local_home,
+    )
+
+    return proc
+
+
+def which(executable):
+    for d in os.environ["PATH"].split(":"):
+        test_path = os.path.join(d, executable)
+        if os.path.exists(test_path) and os.access(test_path, os.X_OK):
+            return os.path.abspath(test_path)
+
+
+def main():
+    parser = OptionParser()
+    parser.add_option(
+        "--config",
+        default=CONFIG_PATH,
+        help="Location of config file. [default: %default]",
+    )
+    parser.add_option(
+        "--log-dir",
+        default=LOG_DIR,
+        help="Location of log directory. [default: %default]",
+    )
+    opts, _ = parser.parse_args()
+
+    cfg = configparser.SafeConfigParser()
+    cfg.read(opts.config)
+
+    sections_list = list(cfg.sections())
+    if not sections_list:
+        log.error("No configuration sections found")
+        return 1
+
+    updater_script = which("update-remote-wn-client")
+    if not updater_script:
+        log.error("update-remote-wn-client not found")
+        return 1
+
+    try:
+        procs = [
+            call_updater(cfg, section, updater_script, opts.log_dir)
+            for section in sections_list
+        ]
+    except Error as e:
+        log.error(e)
+        return 1
+
+    while any(proc.poll() is None for proc in procs):
+        time.sleep(5)
+
+    ret = 0
+    for idx, proc in enumerate(procs):
+        section = sections_list[idx]
+        if proc.returncode == 0:
+            log.info("%s ok." % section)
+        else:
+            log.error(
+                "%s FAILED with error %d.  See %s for details."
+                % (section, proc.returncode, os.path.join(opts.log_dir, section))
+            )
+            ret = 1
+
+    return ret
+
+
+if __name__ == "__main__":
+    logging.basicConfig(format="*** %(message)s", level=logging.INFO)
+    sys.exit(main())
