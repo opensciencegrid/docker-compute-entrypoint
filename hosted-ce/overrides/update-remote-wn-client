@@ -214,7 +214,7 @@ def main():
     parser.add_option(
         "--remote-dir",
         default="/home/bosco/osg-wn-client",
-        help="remote directory the WN client will be placed in. [default: %d]",
+        help="remote directory the WN client will be placed in. [default: %default]",
     )
     parser.add_option("--ssh-key", help="SSH key to use to log in with")
     opts, args = parser.parse_args()
