@@ -68,7 +68,11 @@ def call_updater(cfg, section, updater_script, log_dir):
         cmd.append("--remote-dir=%s" % remote_dir)
 
     logfile = open(os.path.join(log_dir, endpoint), "ab")
-    logfile.write(b"%s %s: %r\n" % (datetime.datetime.now(), local_user, cmd))
+    logfile.write(b"-" * 79 + b"\n")
+    logfile.write(
+        b"Started at %s\nUser: %s\nCommand: %r\n\n"
+        % (datetime.datetime.now(), local_user, cmd)
+    )
     proc = Popen(
         ["sudo", "-H", "-u", local_user] + cmd,
         stdout=logfile,
