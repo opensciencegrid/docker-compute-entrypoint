@@ -25,7 +25,10 @@ class Error(Exception):
 
 
 def call_updater(cfg, section, updater_script, log_dir):
-    """Call a single instance of the updater for a config section."""
+    """Call a single instance of the updater for a config section.
+    Returns an (endpoint name, subprocess.Popen) tuple.
+
+    """
     m = re.match(r"Endpoint\s+([A-Za-z0-9_-]+)", section)
     if not m:
         raise Error(
@@ -73,7 +76,7 @@ def call_updater(cfg, section, updater_script, log_dir):
         cwd=local_home,
     )
 
-    return proc
+    return endpoint, proc
 
 
 def which(executable):
@@ -111,7 +114,7 @@ def main():
         return 1
 
     try:
-        procs = [
+        endpoints_and_procs = [
             call_updater(cfg, section, updater_script, opts.log_dir)
             for section in sections_list
         ]
@@ -119,20 +122,20 @@ def main():
         log.error(e)
         return 1
 
-    while any(proc.poll() is None for proc in procs):
+    while any(proc.poll() is None for _, proc in endpoints_and_procs):
         time.sleep(5)
 
     ret = 0
-    for idx, proc in enumerate(procs):
-        section = sections_list[idx]
+    for ep in endpoints_and_procs:
+        endpoint, proc = ep
         if proc.returncode == 0:
-            log.info("%s ok.", section)
+            log.info("Endpoint %s ok.", endpoint)
         else:
             log.error(
-                "%s FAILED with error %d.  See %s for details.",
-                section,
+                "Endpoint %s FAILED with error %d.  See %s for details.",
+                endpoint,
                 proc.returncode,
-                os.path.join(opts.log_dir, section),
+                os.path.join(opts.log_dir, endpoint),
             )
             ret = 1
 
