@@ -118,7 +118,20 @@ def update_crls(osgrun, cert_dir):
             raise Error("fetch-crl failed with error code %d" % proc.returncode)
 
 
-def rsync_upload(srcdir, destuser, desthost, destdir, ssh_key=None):
+def check_connectivity(remote_user, remote_host, ssh_key):
+    ssh = ["ssh"]
+    if remote_user:
+        ssh.extend(["-l", remote_user])
+    if ssh_key:
+        ssh.extend(["-i", ssh_key])
+    try:
+        subprocess.check_call(ssh + [remote_host, "true"])
+    except CalledProcessError:
+        return False
+    return True
+
+
+def rsync_upload(local_dir, remote_user, remote_host, remote_dir, ssh_key=None):
     # type: (str, str, str, str, str) -> None
     """Use rsync to upload the contents of a directory to a remote host,
     minimizing the time the remote dir spends in an inconsistent state.
@@ -127,18 +140,18 @@ def rsync_upload(srcdir, destuser, desthost, destdir, ssh_key=None):
     The parent directories must already exist.
     """
     ssh = ["ssh"]
-    if destuser:
-        ssh.extend(["-l", destuser])
+    if remote_user:
+        ssh.extend(["-l", remote_user])
     if ssh_key:
         ssh.extend(["-i", ssh_key])
-    olddir = "%s~old~" % destdir
-    newdir = "%s~new~" % destdir
-    srcdir = srcdir.rstrip("/") + "/"  # exactly 1 trailing slash
+    olddir = "%s~old~" % remote_dir
+    newdir = "%s~new~" % remote_dir
+    local_dir = local_dir.rstrip("/") + "/"  # exactly 1 trailing slash
 
-    errstr = "Error rsyncing to remote host %s:%s: " % (desthost, destdir)
+    errstr = "Error rsyncing to remote host %s:%s: " % (remote_host, remote_dir)
     try:
         proc = Popen(
-            ssh + [desthost, "[[ -e %s ]] || echo missing" % shlex_quote(destdir)],
+            ssh + [remote_host, "[[ -e %s ]] || echo missing" % shlex_quote(remote_dir)],
             stdout=PIPE,
         )
     except OSError as e:
@@ -150,34 +163,34 @@ def rsync_upload(srcdir, destuser, desthost, destdir, ssh_key=None):
 
     try:
         if output.rstrip() == "missing":
-            log.info("rsyncing entire WN client to %s:%s", desthost, destdir)
+            log.info("rsyncing entire WN client to %s:%s", remote_host, remote_dir)
             # If remote dir is missing then just upload and return
             subprocess.check_call(["rsync", "-e", " ".join(ssh),
                                    "-qaz",
-                                   srcdir,
-                                   "%s:%s" % (desthost, destdir)])
+                                   local_dir,
+                                   "%s:%s" % (remote_host, remote_dir)])
             return
 
         # Otherwise, upload to newdir
-        log.info("rsyncing WN client changes to %s:%s", desthost, newdir)
+        log.info("rsyncing WN client changes to %s:%s", remote_host, newdir)
         subprocess.check_call(["rsync", "-e", " ".join(ssh),
                                "-qaz",
-                               "--link-dest", destdir,
+                               "--link-dest", remote_dir,
                                "--delete-before",
-                               srcdir,
-                               "%s:%s" % (desthost, newdir)])
+                               local_dir,
+                               "%s:%s" % (remote_host, newdir)])
     except (OSError, CalledProcessError) as e:
         raise Error(errstr + str(e))
 
     # then rename destdir to olddir and newdir to destdir
     try:
-        log.info("Moving %s to %s", newdir, destdir)
+        log.info("Moving %s to %s", newdir, remote_dir)
         subprocess.check_call(ssh +
-            [desthost,
+                              [remote_host,
              "rm -rf {0} && "
              "mv {1} {0} && "
              "mv {2} {1}".format(
-                shlex_quote(olddir), shlex_quote(destdir), shlex_quote(newdir))])
+                shlex_quote(olddir), shlex_quote(remote_dir), shlex_quote(newdir))])
     except (OSError, CalledProcessError) as e:
         raise Error("Error renaming remote directories: %s" % e)
 
@@ -227,6 +240,10 @@ def main():
         subprocess.check_call(["rsync", "--version"], stdout=devnull)
     except (CalledProcessError, EnvironmentError) as e:
         log.error("Error invoking rsync: %s", e)
+        return 1
+
+    if not check_connectivity(opts.remote_user, remote_host, opts.ssh_key):
+        log.error("Could not connect to remote host")
         return 1
 
     with working_dir() as wd:
