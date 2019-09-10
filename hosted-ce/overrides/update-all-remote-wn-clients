@@ -26,11 +26,13 @@ class Error(Exception):
 
 def call_updater(cfg, section, updater_script, log_dir):
     """Call a single instance of the updater for a config section."""
-    if re.search(r"[^A-Za-z0-9_-]", section):
+    m = re.match(r"Endpoint\s+([A-Za-z0-9_-]+)", section)
+    if not m:
         raise Error(
-            "%s: Invalid section name: must consist of letters, numbers, `_` or `-`"
+            "%s: Invalid section name: must start with 'Endpoint' and consist of letters, numbers, `_` or `-`"
             % section
         )
+    endpoint = m.group(1)
 
     def safe_get(option):
         try:
@@ -62,7 +64,7 @@ def call_updater(cfg, section, updater_script, log_dir):
     if remote_dir:
         cmd.append("--remote-dir=%s" % remote_dir)
 
-    logfile = open(os.path.join(log_dir, section), "ab")
+    logfile = open(os.path.join(log_dir, endpoint), "ab")
     logfile.write(b"%s %s: %r\n" % (datetime.datetime.now(), local_user, cmd))
     proc = Popen(
         ["sudo", "-H", "-u", local_user] + cmd,
@@ -98,9 +100,9 @@ def main():
     cfg = configparser.SafeConfigParser()
     cfg.read(opts.config)
 
-    sections_list = list(cfg.sections())
+    sections_list = list(x for x in cfg.sections() if x.startswith("Endpoint"))
     if not sections_list:
-        log.error("No configuration sections found")
+        log.error("No Endpoint sections found")
         return 1
 
     updater_script = which("update-remote-wn-client")
@@ -124,11 +126,13 @@ def main():
     for idx, proc in enumerate(procs):
         section = sections_list[idx]
         if proc.returncode == 0:
-            log.info("%s ok." % section)
+            log.info("%s ok.", section)
         else:
             log.error(
-                "%s FAILED with error %d.  See %s for details."
-                % (section, proc.returncode, os.path.join(opts.log_dir, section))
+                "%s FAILED with error %d.  See %s for details.",
+                section,
+                proc.returncode,
+                os.path.join(opts.log_dir, section),
             )
             ret = 1
 
