@@ -13,8 +13,8 @@ import time
 from six.moves import configparser
 
 
-CONFIG_PATH = "/etc/hosted-ces.ini"
-LOG_DIR = "/var/log/updatewn"
+CONFIG_PATH = "/etc/endpoints.ini"
+LOG_DIR = "/var/log/update-remote-wn-client"
 
 
 log = logging.getLogger(__name__)
