@@ -96,9 +96,13 @@ def update_cas(osgrun, cert_dir):
     subprocess.check_call([osgrun, "osg-ca-manage", "--cert-dir", cert_dir, "refreshCA"])
 
 
-def update_crls(osgrun, cert_dir):
-    """Run fetch-crl; ignore non-fatal errors, raise on others."""
-    command = [osgrun, "fetch-crl"]
+def update_crls(cert_dir):
+    """Run system fetch-crl; ignore non-fatal errors, raise on others.
+
+    Run the system fetch-crl instead of fetch-crl in the tarball install
+    because fetch-crl must be compiled for the same OS as the script runs on.
+    """
+    command = ["fetch-crl"]
     command += ["--infodir", cert_dir]
     command += ["--out", cert_dir]
     command += ["--quiet"]
@@ -269,7 +273,7 @@ def main():
             log.info("Fetching CAs")
             setup_cas(fetch_client_dir, osgrun, cert_dir)
             log.info("Fetching CRLs")
-            update_crls(osgrun, cert_dir)
+            update_crls(cert_dir)
 
             log.info("Uploading")
             rsync_upload(deploy_client_dir, opts.remote_user, remote_host, opts.remote_dir, opts.ssh_key)
