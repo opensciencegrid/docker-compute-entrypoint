@@ -24,7 +24,7 @@ class Error(Exception):
     pass
 
 
-def call_updater(cfg, section, updater_script, log_dir):
+def call_updater(cfg, section, updater_script, log_dir, dry_run=False):
     """Call a single instance of the updater for a config section.
     Returns an (endpoint name, subprocess.Popen) tuple.
 
@@ -67,6 +67,10 @@ def call_updater(cfg, section, updater_script, log_dir):
     if remote_dir:
         cmd.append("--remote-dir=%s" % remote_dir)
 
+    if dry_run:
+        print("Would run %r as %s" % (cmd, local_user))
+        return None, None
+
     logfile = open(os.path.join(log_dir, endpoint), "ab")
     logfile.write(b"-" * 79 + b"\n")
     logfile.write(
@@ -102,6 +106,12 @@ def main():
         default=LOG_DIR,
         help="Location of log directory. [default: %default]",
     )
+    parser.add_option(
+        "-n",
+        "--dry-run",
+        action="store_true",
+        help="Don't change anything, just print the commands that would be run"
+    )
     opts, _ = parser.parse_args()
 
     cfg = configparser.SafeConfigParser()
@@ -114,17 +124,24 @@ def main():
 
     updater_script = which("update-remote-wn-client")
     if not updater_script:
-        log.error("update-remote-wn-client not found")
-        return 1
+        msg = "update-remote-wn-client not found in PATH"
+        if opts.dry_run:
+            log.warning(msg)
+        else:
+            log.error(msg)
+            return 1
 
     try:
         endpoints_and_procs = [
-            call_updater(cfg, section, updater_script, opts.log_dir)
+            call_updater(cfg, section, updater_script, opts.log_dir, opts.dry_run)
             for section in sections_list
         ]
     except Error as e:
         log.error(e)
         return 1
+
+    if opts.dry_run:
+        return 0
 
     while any(proc.poll() is None for _, proc in endpoints_and_procs):
         time.sleep(5)
