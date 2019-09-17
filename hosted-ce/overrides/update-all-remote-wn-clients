@@ -29,10 +29,10 @@ def call_updater(cfg, section, updater_script, log_dir):
     Returns an (endpoint name, subprocess.Popen) tuple.
 
     """
-    m = re.match(r"Endpoint\s+([A-Za-z0-9_-]+)", section)
+    m = re.match(r"Endpoint\s+([^\s:\\/]+)\s*$", section)
     if not m:
         raise Error(
-            "%s: Invalid section name: must start with 'Endpoint' and consist of letters, numbers, `_` or `-`"
+            "%s: Endpoint name can't contain whitespace, `\\`, `/`, or `:`"
             % section
         )
     endpoint = m.group(1)
