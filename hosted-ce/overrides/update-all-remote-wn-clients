@@ -51,9 +51,8 @@ def call_updater(cfg, section, updater_script, log_dir, dry_run=False):
         raise Error("%s: Missing required option local_user" % section)
     if not remote_host:
         raise Error("%s: Missing required option remote_host" % section)
-
     try:
-        local_home = pwd.getpwnam(local_user)[5]
+        pwd.getpwnam(local_user)
     except KeyError:
         raise Error("%s: local_user %s does not exist" % (section, local_user))
 
@@ -80,7 +79,7 @@ def call_updater(cfg, section, updater_script, log_dir, dry_run=False):
             ["sudo", "-H", "-u", local_user] + cmd,
             stdout=log_file,
             stderr=STDOUT,
-            cwd=local_home,
+            cwd="/",
         )
         returncode = proc.wait()
 
