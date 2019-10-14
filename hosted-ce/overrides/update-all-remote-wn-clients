@@ -132,6 +132,7 @@ def main():
         msg = "update-remote-wn-client not found in PATH"
         if opts.dry_run:
             log.warning(msg)
+            updater_script = "update-remote-wn-client"
         else:
             log.error(msg)
             return 1
