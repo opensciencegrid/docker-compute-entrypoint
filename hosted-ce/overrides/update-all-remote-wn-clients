@@ -8,7 +8,6 @@ import os
 import re
 from subprocess import Popen, STDOUT
 import sys
-import time
 
 from six.moves import configparser
 
@@ -32,8 +31,7 @@ def call_updater(cfg, section, updater_script, log_dir, dry_run=False):
     m = re.match(r"Endpoint\s+([^\s:\\/]+)\s*$", section)
     if not m:
         raise Error(
-            "%s: Endpoint name can't contain whitespace, `\\`, `/`, or `:`"
-            % section
+            "%s: Endpoint name can't contain whitespace, `\\`, `/`, or `:`" % section
         )
     endpoint = m.group(1)
 
@@ -53,9 +51,8 @@ def call_updater(cfg, section, updater_script, log_dir, dry_run=False):
         raise Error("%s: Missing required option local_user" % section)
     if not remote_host:
         raise Error("%s: Missing required option remote_host" % section)
-
     try:
-        local_home = pwd.getpwnam(local_user)[5]
+        pwd.getpwnam(local_user)
     except KeyError:
         raise Error("%s: local_user %s does not exist" % (section, local_user))
 
@@ -69,22 +66,30 @@ def call_updater(cfg, section, updater_script, log_dir, dry_run=False):
 
     if dry_run:
         print("Would run %r as %s" % (cmd, local_user))
-        return None, None
+        return
 
-    logfile = open(os.path.join(log_dir, endpoint), "ab")
-    logfile.write(b"-" * 79 + b"\n")
-    logfile.write(
-        b"Started at %s\nUser: %s\nCommand: %r\n\n"
-        % (datetime.datetime.now(), local_user, cmd)
-    )
-    proc = Popen(
-        ["sudo", "-H", "-u", local_user] + cmd,
-        stdout=logfile,
-        stderr=STDOUT,
-        cwd=local_home,
-    )
+    log_file_path = os.path.join(log_dir, endpoint)
+    with open(log_file_path, "ab") as log_file:
+        log_file.write(b"-" * 79 + b"\n")
+        log_file.write(
+            b"Started at %s\nUser: %s\nCommand: %r\n\n"
+            % (datetime.datetime.now(), local_user, cmd)
+        )
+        proc = Popen(
+            ["sudo", "-H", "-u", local_user] + cmd,
+            stdout=log_file,
+            stderr=STDOUT,
+            cwd="/",
+        )
+        returncode = proc.wait()
 
-    return endpoint, proc
+    if returncode == 0:
+        log.info("Endpoint %s ok.", endpoint)
+    else:
+        raise Error(
+            "Endpoint %s FAILED with error %d.  See %s for details."
+            % (endpoint, returncode, log_file_path)
+        )
 
 
 def which(executable):
@@ -110,7 +115,7 @@ def main():
         "-n",
         "--dry-run",
         action="store_true",
-        help="Don't change anything, just print the commands that would be run"
+        help="Don't change anything, just print the commands that would be run",
     )
     opts, _ = parser.parse_args()
 
@@ -127,40 +132,19 @@ def main():
         msg = "update-remote-wn-client not found in PATH"
         if opts.dry_run:
             log.warning(msg)
+            updater_script = "update-remote-wn-client"
         else:
             log.error(msg)
             return 1
 
     try:
-        endpoints_and_procs = [
+        for section in sections_list:
             call_updater(cfg, section, updater_script, opts.log_dir, opts.dry_run)
-            for section in sections_list
-        ]
     except Error as e:
         log.error(e)
         return 1
 
-    if opts.dry_run:
-        return 0
-
-    while any(proc.poll() is None for _, proc in endpoints_and_procs):
-        time.sleep(5)
-
-    ret = 0
-    for ep in endpoints_and_procs:
-        endpoint, proc = ep
-        if proc.returncode == 0:
-            log.info("Endpoint %s ok.", endpoint)
-        else:
-            log.error(
-                "Endpoint %s FAILED with error %d.  See %s for details.",
-                endpoint,
-                proc.returncode,
-                os.path.join(opts.log_dir, endpoint),
-            )
-            ret = 1
-
-    return ret
+    return 0
 
 
 if __name__ == "__main__":
