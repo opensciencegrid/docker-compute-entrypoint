@@ -75,6 +75,7 @@ def call_updater(cfg, section, updater_script, log_dir, dry_run=False):
             b"Started at %s\nUser: %s\nCommand: %r\n\n"
             % (datetime.datetime.now(), local_user, cmd)
         )
+        log_file.flush()
         proc = Popen(
             ["sudo", "-H", "-u", local_user] + cmd,
             stdout=log_file,
