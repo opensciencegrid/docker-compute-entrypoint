@@ -129,6 +129,8 @@ def check_connectivity(remote_user, remote_host, ssh_key):
     if ssh_key:
         ssh.extend(["-i", ssh_key])
     try:
+        # Suppress any SSH pre-login banners 
+        ssh.extend(["-q"])
         subprocess.check_call(ssh + [remote_host, "true"])
     except CalledProcessError:
         return False
@@ -151,6 +153,9 @@ def rsync_upload(local_dir, remote_user, remote_host, remote_dir, ssh_key=None):
     olddir = "%s~old~" % remote_dir
     newdir = "%s~new~" % remote_dir
     local_dir = local_dir.rstrip("/") + "/"  # exactly 1 trailing slash
+    
+    # Suppress any SSH pre-login banners 
+    ssh.extend(["-q"])
 
     errstr = "Error rsyncing to remote host %s:%s: " % (remote_host, remote_dir)
     try:
