@@ -31,7 +31,7 @@ chmod 644 $CONDOR_SUDO_FILE
 
 echo "Running OSG configure.."
 # Run the OSG Configure script to set up bosco
-osg-configure -c
+osg-configure -c --verbose VERBOSE
 
 # Cert stuff
 if [ "${DEVELOPER,,}" == 'true' ]; then
