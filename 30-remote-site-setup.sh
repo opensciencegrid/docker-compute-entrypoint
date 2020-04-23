@@ -88,6 +88,7 @@ if [[ -n $OVERRIDE_DIR ]]; then
     fi
 fi
 
+echo "Using Bosco tarball: $(bosco_findplatform --url)"
 for ruser in $users; do
     setup_ssh_config
     [[ $cvmfs_wn_client -eq 0 ]] || setup_endpoints_ini
