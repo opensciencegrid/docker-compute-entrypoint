@@ -21,7 +21,7 @@ GIT_ENDPOINT=$1
 RESOURCE_NAME=$2
 
 # pre-scan the Git repo's host key
-if [[ $GIT_ENDPOINT =~ ^[A-Za-z0-9]+@ ]]; then
+if [[ $GIT_ENDPOINT =~ ^[-A-Za-z0-9]+@ ]]; then
     SSH_ENDPOINT=${GIT_ENDPOINT%%:*}
     ssh-keyscan ${SSH_ENDPOINT##*@}
 fi
