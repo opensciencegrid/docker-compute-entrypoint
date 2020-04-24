@@ -57,5 +57,5 @@ if [ ! -f $hostcert_path ] || [ ! -f $hostkey_path ]; then
 fi
 
 echo ">>>>> YOUR CERTIFICATE INFORMATION IS:"
-openssl x509 -in $hostcert_path -noout -text
+openssl x509 -in $hostcert_path -text
 echo "><><><><><><><><><><><><><><><><><><><"
