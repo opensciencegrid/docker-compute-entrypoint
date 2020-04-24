@@ -44,10 +44,14 @@ fi
 hostcert_path=/etc/grid-security/hostcert.pem
 hostkey_path=/etc/grid-security/hostkey.pem
 
-if [ ! -f $hostcert_path ] && [ ! -f $hostkey_path ]; then
+certbot_opts="--noninteractive --agree-tos --standalone --email $CE_CONTACT -d $CE_HOSTNAME"
+if [ ! -f $hostcert_path ] || [ ! -f $hostkey_path ]; then
     echo "Establishing Let's Encrypt certificate.."
+    if [ -f $hostkey_path ]; then
+        certbot_opts="$certbot_opts --reuse-key"
+    fi
     # this needs to be automated for renewal
-    certbot certonly -n --agree-tos --standalone --email $CE_CONTACT -d $CE_HOSTNAME
+    certbot $certbot_opts
     ln -s /etc/letsencrypt/live/$CE_HOSTNAME/cert.pem $hostcert_path
     ln -s /etc/letsencrypt/live/$CE_HOSTNAME/privkey.pem $hostkey_path
 fi
