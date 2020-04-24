@@ -51,9 +51,9 @@ if [ ! -f $hostcert_path ] || [ ! -f $hostkey_path ]; then
         certbot_opts="$certbot_opts --reuse-key"
     fi
     # this needs to be automated for renewal
-    certbot $certbot_opts
+    certbot certonly $certbot_opts
     ln -s /etc/letsencrypt/live/$CE_HOSTNAME/cert.pem $hostcert_path
-    ln -s /etc/letsencrypt/live/$CE_HOSTNAME/privkey.pem $hostkey_path
+    [ -f $hostkey_path] || ln -s /etc/letsencrypt/live/$CE_HOSTNAME/privkey.pem $hostkey_path
 fi
 
 echo ">>>>> YOUR CERTIFICATE INFORMATION IS:"
