@@ -24,40 +24,30 @@ class Error(Exception):
     pass
 
 
-def call_updater(cfg, section, updater_script, log_dir, dry_run=False):
-    """Call a single instance of the updater for a config section.
-    Returns an (endpoint name, subprocess.Popen) tuple.
+def check_section(cfg, section):
+    """Verify a single section of the config file
 
     """
+    assert cfg.has_section(section), "%s missing - this should not happen" % section
     m = re.match(r"Endpoint\s+([^\s:\\/]+)\s*$", section)
     if not m:
         raise Error(
             "%s: Endpoint name can't contain whitespace, `\\`, `/`, or `:`" % section
         )
-    endpoint = m.group(1)
 
     def safe_get(option):
         try:
             return cfg.get(section, option)
-        except (configparser.NoSectionError, configparser.NoOptionError):
+        except configparser.NoOptionError:
             return
 
     local_user = safe_get("local_user")
     remote_host = safe_get("remote_host")
-    upstream_url = safe_get("upstream_url")
-    remote_user = safe_get("remote_user")
-    remote_dir = safe_get("remote_dir")
-    # Have default timeout be nonzero
-    if not cfg.has_section(section) or not cfg.has_option(section, "timeout"):
-        timeout = "3600"
-    else:
-        timeout = safe_get("timeout")
+    timeout = safe_get("timeout")
     try:
         if timeout:
             timeout = int(timeout)
-        else:
-            timeout = 0
-    except ValueError as e:
+    except ValueError:
         raise Error("%s: Invalid timeout %s" % (section, timeout))
 
     if not local_user:
@@ -68,6 +58,40 @@ def call_updater(cfg, section, updater_script, log_dir, dry_run=False):
         pwd.getpwnam(local_user)
     except KeyError:
         raise Error("%s: local_user %s does not exist" % (section, local_user))
+
+
+def call_updater(cfg, section, updater_script, log_dir, dry_run=False):
+    """Call a single instance of the updater for a config section.
+    Return True on success and False on failure.
+
+    """
+    m = re.match(r"Endpoint\s+([^\s:\\/]+)\s*$", section)
+    assert m, "Invalid chars in %s - this should have been caught" % section
+    endpoint = m.group(1)
+
+    def safe_get(option):
+        try:
+            return cfg.get(section, option)
+        except configparser.NoOptionError:
+            return
+
+    local_user = safe_get("local_user")
+    remote_host = safe_get("remote_host")
+    upstream_url = safe_get("upstream_url")
+    remote_user = safe_get("remote_user")
+    remote_dir = safe_get("remote_dir")
+    # Have default timeout be nonzero
+    timeout = safe_get("timeout")
+    if timeout is None:
+        timeout = "3600"
+    if timeout:
+        timeout = int(timeout)
+    else:
+        timeout = 0
+
+    assert local_user, "local_user not specified - this should have been caught"
+    assert remote_host, "remote_host not specified - this should have been caught"
+    assert pwd.getpwnam(local_user), "nonexistant user - this should have been caught"
 
     cmd = [updater_script, remote_host]
     if upstream_url:
@@ -103,16 +127,20 @@ def call_updater(cfg, section, updater_script, log_dir, dry_run=False):
 
     if returncode == 0:
         log.info("Endpoint %s ok.", endpoint)
+        return True
     elif returncode == 124:
-        raise Error(
-            "Endpoint %s TIMED OUT.  See %s for details."
-            % (endpoint, log_file_path)
+        log.error(
+            "Endpoint %s TIMED OUT.  See %s for details.", endpoint, log_file_path
         )
+        return False
     else:
-        raise Error(
-            "Endpoint %s FAILED with error %d.  See %s for details."
-            % (endpoint, returncode, log_file_path)
+        log.error(
+            "Endpoint %s FAILED with error %d.  See %s for details.",
+            endpoint,
+            returncode,
+            log_file_path,
         )
+        return False
 
 
 def which(executable):
@@ -150,6 +178,13 @@ def main():
         log.error("No Endpoint sections found")
         return 1
 
+    try:
+        for section in sections_list:
+            check_section(cfg, section)
+    except Error as e:
+        log.error(e)
+        return 1
+
     updater_script = which("update-remote-wn-client")
     if not updater_script:
         msg = "update-remote-wn-client not found in PATH"
@@ -160,14 +195,13 @@ def main():
             log.error(msg)
             return 1
 
-    try:
-        for section in sections_list:
-            call_updater(cfg, section, updater_script, opts.log_dir, opts.dry_run)
-    except Error as e:
-        log.error(e)
-        return 1
+    ret = 0
+    for section in sections_list:
+        error = call_updater(cfg, section, updater_script, opts.log_dir, opts.dry_run)
+        if error:
+            ret = 1
 
-    return 0
+    return ret
 
 
 if __name__ == "__main__":
