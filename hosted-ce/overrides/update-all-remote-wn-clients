@@ -9,6 +9,7 @@ import re
 from subprocess import Popen, STDOUT
 import sys
 
+# noinspection PyUnresolvedReferences
 from six.moves import configparser
 
 
@@ -46,6 +47,18 @@ def call_updater(cfg, section, updater_script, log_dir, dry_run=False):
     upstream_url = safe_get("upstream_url")
     remote_user = safe_get("remote_user")
     remote_dir = safe_get("remote_dir")
+    # Have default timeout be nonzero
+    if not cfg.has_section(section) or not cfg.has_option(section, "timeout"):
+        timeout = "3600"
+    else:
+        timeout = safe_get("timeout")
+    try:
+        if timeout:
+            timeout = int(timeout)
+        else:
+            timeout = 0
+    except ValueError as e:
+        raise Error("%s: Invalid timeout %s" % (section, timeout))
 
     if not local_user:
         raise Error("%s: Missing required option local_user" % section)
@@ -63,6 +76,10 @@ def call_updater(cfg, section, updater_script, log_dir, dry_run=False):
         cmd.append("--remote-user=%s" % remote_user)
     if remote_dir:
         cmd.append("--remote-dir=%s" % remote_dir)
+
+    if timeout:
+        cmd.insert(0, "timeout")
+        cmd.insert(1, str(timeout))
 
     if dry_run:
         print("Would run %r as %s" % (cmd, local_user))
@@ -86,6 +103,11 @@ def call_updater(cfg, section, updater_script, log_dir, dry_run=False):
 
     if returncode == 0:
         log.info("Endpoint %s ok.", endpoint)
+    elif returncode == 124:
+        raise Error(
+            "Endpoint %s TIMED OUT.  See %s for details."
+            % (endpoint, log_file_path)
+        )
     else:
         raise Error(
             "Endpoint %s FAILED with error %d.  See %s for details."
