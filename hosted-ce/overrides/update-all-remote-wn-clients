@@ -26,7 +26,8 @@ class Error(Exception):
 
 def call_updater(cfg, section, updater_script, log_dir, dry_run=False):
     """Call a single instance of the updater for a config section.
-    Returns an (endpoint name, subprocess.Popen) tuple.
+    Return True on success and False on failure.
+    Raise Error if there's a problem with the config file.
 
     """
     m = re.match(r"Endpoint\s+([^\s:\\/]+)\s*$", section)
@@ -103,16 +104,20 @@ def call_updater(cfg, section, updater_script, log_dir, dry_run=False):
 
     if returncode == 0:
         log.info("Endpoint %s ok.", endpoint)
+        return True
     elif returncode == 124:
-        raise Error(
-            "Endpoint %s TIMED OUT.  See %s for details."
-            % (endpoint, log_file_path)
+        log.error(
+            "Endpoint %s TIMED OUT.  See %s for details.", endpoint, log_file_path
         )
+        return False
     else:
-        raise Error(
-            "Endpoint %s FAILED with error %d.  See %s for details."
-            % (endpoint, returncode, log_file_path)
+        log.error(
+            "Endpoint %s FAILED with error %d.  See %s for details.",
+            endpoint,
+            returncode,
+            log_file_path,
         )
+        return False
 
 
 def which(executable):
@@ -160,14 +165,19 @@ def main():
             log.error(msg)
             return 1
 
+    ret = 0
     try:
         for section in sections_list:
-            call_updater(cfg, section, updater_script, opts.log_dir, opts.dry_run)
+            error = call_updater(
+                cfg, section, updater_script, opts.log_dir, opts.dry_run
+            )
+            if error:
+                ret = 1
     except Error as e:
         log.error(e)
         return 1
 
-    return 0
+    return ret
 
 
 if __name__ == "__main__":
