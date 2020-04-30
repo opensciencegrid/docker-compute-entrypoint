@@ -22,7 +22,7 @@ RESOURCE_NAME=$2
 
 # pre-scan the Git repo's host key
 if [[ $GIT_ENDPOINT =~ ^[A-Za-z0-9_-]+@([^:]+): ]]; then
-    ssh-keyscan "${BASH_REMATCH[1]}"
+    ssh-keyscan "${BASH_REMATCH[1]}" >> ~/.ssh/known_hosts
 fi
 
 REPO_DIR=$(mktemp -d)
