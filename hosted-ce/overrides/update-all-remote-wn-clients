@@ -24,6 +24,47 @@ class Error(Exception):
     pass
 
 
+def check_section(cfg, section):
+    """Verify a single section of the config file
+
+    """
+    m = re.match(r"Endpoint\s+([^\s:\\/]+)\s*$", section)
+    if not m:
+        raise Error(
+            "%s: Endpoint name can't contain whitespace, `\\`, `/`, or `:`" % section
+        )
+
+    def safe_get(option):
+        try:
+            return cfg.get(section, option)
+        except (configparser.NoSectionError, configparser.NoOptionError):
+            return
+
+    local_user = safe_get("local_user")
+    remote_host = safe_get("remote_host")
+    # Have default timeout be nonzero
+    if not cfg.has_section(section) or not cfg.has_option(section, "timeout"):
+        timeout = "3600"
+    else:
+        timeout = safe_get("timeout")
+    try:
+        if timeout:
+            timeout = int(timeout)
+        else:
+            timeout = 0
+    except ValueError as e:
+        raise Error("%s: Invalid timeout %s" % (section, timeout))
+
+    if not local_user:
+        raise Error("%s: Missing required option local_user" % section)
+    if not remote_host:
+        raise Error("%s: Missing required option remote_host" % section)
+    try:
+        pwd.getpwnam(local_user)
+    except KeyError:
+        raise Error("%s: local_user %s does not exist" % (section, local_user))
+
+
 def call_updater(cfg, section, updater_script, log_dir, dry_run=False):
     """Call a single instance of the updater for a config section.
     Return True on success and False on failure.
@@ -153,6 +194,13 @@ def main():
     sections_list = list(x for x in cfg.sections() if x.startswith("Endpoint"))
     if not sections_list:
         log.error("No Endpoint sections found")
+        return 1
+
+    try:
+        for section in sections_list:
+            check_section(cfg, section)
+    except Error as e:
+        log.error(e)
         return 1
 
     updater_script = which("update-remote-wn-client")
