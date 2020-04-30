@@ -46,7 +46,6 @@ RUN patch -d / -p0 < /tmp/ssh_q.patch
 #         bosco_override/
 #         ...
 #     ...
-COPY bosco-override-setup.sh /usr/local/bin
 
 # Manage HTCondor-CE with supervisor
 COPY 10-htcondor-ce.conf /etc/supervisord.d/
