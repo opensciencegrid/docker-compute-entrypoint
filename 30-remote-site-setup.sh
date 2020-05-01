@@ -62,7 +62,7 @@ function bosco_override_setup {
     #   <RESOURCE NAME>/bosco_override/
     RESOURCE_DIR="$REPO_DIR/$RESOURCE_NAME/"
     [[ -d $RESOURCE_DIR ]] || errexit "Could not find $RESOURCE_NAME/ under $GIT_ENDPOINT"
-    rsync -az "$RESOURCE_DIR/bosco_override/"  $OVERRIDE_DIR
+    rsync -a "$RESOURCE_DIR/bosco_override/"  $OVERRIDE_DIR
 }
 
 
