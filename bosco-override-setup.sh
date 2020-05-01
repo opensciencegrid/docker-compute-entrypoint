@@ -15,14 +15,25 @@ function errexit {
     exit 1
 }
 
-[[ $# -eq 2 ]] || errexit "Usage: bosco-override-setup.sh <GIT ENDPOINT> <RESOURCE NAME>"
+[[ $# -ge 2 ]] || errexit "Usage: bosco-override-setup.sh <GIT ENDPOINT> <RESOURCE NAME> [<GIT SSH KEY>]"
 
 GIT_ENDPOINT=$1
 RESOURCE_NAME=$2
+GIT_SSH_KEY=$3
 
 # pre-scan the Git repo's host key
-if [[ $GIT_ENDPOINT =~ ^[A-Za-z0-9_-]+@([^:]+): ]]; then
-    ssh-keyscan "${BASH_REMATCH[1]}" >> ~/.ssh/known_hosts
+if [[ $GIT_ENDPOINT =~ ^([A-Za-z0-9_-]+)@([^:]+): ]]; then
+    GIT_USER="${BASH_REMATCH[1]}"
+    GIT_HOST="${BASH_REMATCH[2]}"
+    ssh-keyscan "${BASH_REMATCH[2]}" >> ~/.ssh/known_hosts
+    if [[ -f "$GIT_SSH_KEY" ]]; then
+        cat <<EOF >> ~/.ssh/config
+
+Host $GIT_HOST
+User $GIT_USER
+IdentityFile $GIT_SSH_KEY
+EOF
+    fi
 fi
 
 REPO_DIR=$(mktemp -d)
