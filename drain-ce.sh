@@ -11,4 +11,4 @@ condor_ce_reconfig
 condor_ce_rm -all
 
 # Upload accounting data
-/usr/share/gratia/htcondor-ce/condor_meter
+/usr/share/gratia/htcondor-ce/condor_meter -f /etc/gratia/htcondor-ce/ProbeConfig
