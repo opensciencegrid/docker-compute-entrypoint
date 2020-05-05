@@ -73,6 +73,13 @@ users=$(cat /etc/grid-security/grid-mapfile /etc/grid-security/voms-mapfile | \
             sort -u)
 [[ -n $users ]] || exit 1
 
+# Allow the condor user to run the WN client updater as the local users
+CONDOR_SUDO_FILE=/etc/sudoers.d/10-condor-ssh
+condor_sudo_users=`tr ' ' ',' <<< $users`
+echo "condor ALL = ($condor_sudo_users) NOPASSWD: /usr/bin/update-remote-wn-client" \
+      > $CONDOR_SUDO_FILE
+chmod 644 $CONDOR_SUDO_FILE
+
 grep '^OSG_GRID="/cvmfs/oasis.opensciencegrid.org/osg-software/osg-wn-client' \
      /var/lib/osg/job-environment*.conf > /dev/null 2>&1
 cvmfs_wn_client=$?
