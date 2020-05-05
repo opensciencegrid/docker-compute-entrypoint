@@ -101,11 +101,13 @@ def call_updater(cfg, section, updater_script, log_dir, dry_run=False):
     if remote_dir:
         cmd.append("--remote-dir=%s" % remote_dir)
 
+    timeout_cmd = []
     if timeout:
-        cmd.insert(0, "timeout")
-        cmd.insert(1, str(timeout))
+        timeout_cmd = ["timeout", str(timeout)]
 
     if dry_run:
+        if timeout:
+            print("Using %r" % timeout_cmd)
         print("Would run %r as %s" % (cmd, local_user))
         return
 
@@ -118,7 +120,7 @@ def call_updater(cfg, section, updater_script, log_dir, dry_run=False):
         )
         log_file.flush()
         proc = Popen(
-            ["sudo", "-H", "-u", local_user] + cmd,
+            timeout_cmd + ["sudo", "-n", "-H", "-u", local_user] + cmd,
             stdout=log_file,
             stderr=STDOUT,
             cwd="/",
