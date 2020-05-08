@@ -19,11 +19,6 @@ COPY 50-nonroot-gratia-setup.sh /etc/osg/image-config.d/
 
 COPY 99-container.conf /usr/share/condor-ce/config.d/
 
-# TODO: Drop this after implementing non-root Gratia probes
-# https://opensciencegrid.atlassian.net/browse/SOFTWARE-3975
-RUN chmod 1777 /var/lib/gratia/tmp
-RUN touch /var/lock/subsys/gratia-probes-cron
-
 # do the bad thing of overwriting the existing cron job for fetch-crl
 ADD fetch-crl /etc/cron.d/fetch-crl
 RUN chmod 644 /etc/cron.d/fetch-crl
