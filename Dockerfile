@@ -15,6 +15,7 @@ RUN yum install -y --enablerepo=osg-minefield \
 
 COPY 25-hosted-ce-setup.sh /etc/osg/image-config.d/
 COPY 30-remote-site-setup.sh /etc/osg/image-config.d/
+COPY 50-nonroot-gratia-setup.sh /etc/osg/image-config.d/
 
 COPY 99-container.conf /usr/share/condor-ce/config.d/
 
@@ -30,6 +31,7 @@ RUN chmod 644 /etc/cron.d/fetch-crl
 # Include script to drain the CE and upload accounting data to prepare for container teardown
 COPY drain-ce.sh /usr/local/bin/
 
+COPY configure-nonroot-gratia.py /usr/local/bin/
 COPY remote-wn-client-wrapper.sh /usr/local/bin/
 
 # Use "ssh -q" in bosco_cluster and update-remote-wn-client until the changes have been
