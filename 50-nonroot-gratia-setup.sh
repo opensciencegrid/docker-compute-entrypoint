@@ -1,3 +1,3 @@
 #!/bin/bash
 
-/usr/local/bin/configure-gratia.py /etc/gratia/htcondor-ce/ProbeConfig
+/usr/local/bin/configure-nonroot-gratia.py /etc/gratia/htcondor-ce/ProbeConfig
