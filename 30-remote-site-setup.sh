@@ -99,8 +99,6 @@ for ruser in $users; do
     [[ $cvmfs_wn_client -eq 0 ]] || setup_endpoints_ini
     # $REMOTE_BATCH needs to be specified in the environment
     bosco_cluster "${override_opts[@]}" -a "${ruser}@$REMOTE_HOST" "$REMOTE_BATCH"
-    # Workaround for bug that causes failure to find the remote blahp scripts
-    ssh $ruser@$REMOTE_HOST 'ln -s ~/bosco/glite/bin/ ~/bosco/glite/libexec'
 done
 
 [[ $cvmfs_wn_client -eq 0 ]] || sudo -u condor update-all-remote-wn-clients --log-dir /var/log/condor-ce/
