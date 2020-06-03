@@ -23,6 +23,10 @@ COPY 99-container.conf /usr/share/condor-ce/config.d/
 ADD fetch-crl /etc/cron.d/fetch-crl
 RUN chmod 644 /etc/cron.d/fetch-crl
 
+# HACK: override bosco_cluster so that it doesn't copy over the SSH
+# pub key to the remote side. We set this up with the site out of band.
+ADD bosco_cluster /usr/bin/bosco_cluster
+
 # Include script to drain the CE and upload accounting data to prepare for container teardown
 COPY drain-ce.sh /usr/local/bin/
 
