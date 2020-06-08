@@ -36,17 +36,19 @@ TR=tr
 usage()
 {
 cat << EOM
-usage: $0 command
+usage: $0 [options] command
 
 commands:
  -l|--list                  List the installed clusters
  -a|--add host sched        Install and add a cluster, with scheduler sched
  -r|--remove [host]         Remove the installed cluster (first in list)
  -s|--status [host]         Get status of installed cluster
- -k|--key <path>            Path to private key to use for cluster connections
  -t|--test [host]           Test the installed cluster (all clusters)
- -o|--override directory    Override the bosco installation with a directory structure
  -h|--help                  Show this help message
+
+options
+ -k|--key <path>            Path to private key to use for cluster connections
+ -o|--override directory    Override the bosco installation with a directory structure
 
 Where host is user@fqdn.example.com
 $0 can manage max 254 clustars
@@ -738,7 +740,7 @@ if [ `uname` = "Darwin" ] ; then
     # Mac OS X doesn't have GNU getopt, so not fancy argument checking here
     TEMP="$@"
 else
-    TEMP=`getopt -a -o a:ls:t:r:hp:o: --longoptions add:,platform:,list,status:,test:,remove:,help,override:  -n 'bosco_cluster' -- "$@"`
+    TEMP=`getopt -a -o a:ls:k:t:r:hp:o: --longoptions add:,platform:,list,status:,key:,test:,remove:,help,override:  -n 'bosco_cluster' -- "$@"`
 
     if [ $? != 0 ]; then usage; echo "Terminating..." >&2; exit 1; fi
 fi
@@ -760,7 +762,7 @@ while true; do
                    fi
                    exit 0 ;;
         -s|--status) get_status $2;  shift 2; exit 0 ;;
-        -k|--key) bosco_key $2; shift 2;;
+        -k|--key) bosco_key=$2; shift 2;;
         -t|--test) test_cluster $2; exit 0 ;;
         -r|--remove) remove_cluster $2; exit 0;;
         -o|--override) override_dir=$2; shift 2;;
