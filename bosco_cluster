@@ -36,17 +36,19 @@ TR=tr
 usage()
 {
 cat << EOM
-usage: $0 command
+usage: $0 [options] command
 
 commands:
  -l|--list                  List the installed clusters
  -a|--add host sched        Install and add a cluster, with scheduler sched
  -r|--remove [host]         Remove the installed cluster (first in list)
  -s|--status [host]         Get status of installed cluster
- -k|--key <path>            Path to private key to use for cluster connections
  -t|--test [host]           Test the installed cluster (all clusters)
- -o|--override directory    Override the bosco installation with a directory structure
  -h|--help                  Show this help message
+
+options
+ -k|--key <path>            Path to private key to use for cluster connections
+ -o|--override directory    Override the bosco installation with a directory structure
 
 Where host is user@fqdn.example.com
 $0 can manage max 254 clustars
