@@ -760,7 +760,7 @@ while true; do
                    fi
                    exit 0 ;;
         -s|--status) get_status $2;  shift 2; exit 0 ;;
-        -k|--key) bosco_key $2; shift 2;;
+        -k|--key) bosco_key=$2; shift 2;;
         -t|--test) test_cluster $2; exit 0 ;;
         -r|--remove) remove_cluster $2; exit 0;;
         -o|--override) override_dir=$2; shift 2;;
