@@ -15,7 +15,7 @@ setup_ssh_config () {
   chmod 700 $ssh_dir
 
   # copy Bosco key
-  ssh_key=$ssh_dir/bosco.key
+  ssh_key=$ssh_dir/bosco_key.rsa
   cp $BOSCO_KEY $ssh_key
   chmod 600 $ssh_key
   chown "${ruser}": $ssh_key
@@ -98,7 +98,7 @@ for ruser in $users; do
     setup_ssh_config
     [[ $cvmfs_wn_client -eq 0 ]] || setup_endpoints_ini
     # $REMOTE_BATCH needs to be specified in the environment
-    bosco_cluster "${override_opts[@]}" -k "$BOSCO_KEY" -a "${ruser}@$REMOTE_HOST" "$REMOTE_BATCH"
+    bosco_cluster "${override_opts[@]}" -a "${ruser}@$REMOTE_HOST" "$REMOTE_BATCH"
 done
 
 [[ $cvmfs_wn_client -eq 0 ]] || sudo -u condor update-all-remote-wn-clients --log-dir /var/log/condor-ce/
