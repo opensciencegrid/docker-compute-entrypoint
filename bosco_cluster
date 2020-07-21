@@ -36,7 +36,7 @@ TR=tr
 usage()
 {
 cat << EOM
-usage: $0 [options] command
+usage: $0 command
 
 commands:
  -l|--list                  List the installed clusters
@@ -44,11 +44,9 @@ commands:
  -r|--remove [host]         Remove the installed cluster (first in list)
  -s|--status [host]         Get status of installed cluster
  -t|--test [host]           Test the installed cluster (all clusters)
- -h|--help                  Show this help message
-
-options
- -k|--key <path>            Path to private key to use for cluster connections
  -o|--override directory    Override the bosco installation with a directory structure
+ -d|--debug                 Display debugging output
+ -h|--help                  Show this help message
 
 Where host is user@fqdn.example.com
 $0 can manage max 254 clustars
@@ -740,7 +738,7 @@ if [ `uname` = "Darwin" ] ; then
     # Mac OS X doesn't have GNU getopt, so not fancy argument checking here
     TEMP="$@"
 else
-    TEMP=`getopt -a -o a:ls:k:t:r:hp:o: --longoptions add:,platform:,list,status:,key:,test:,remove:,help,override:  -n 'bosco_cluster' -- "$@"`
+    TEMP=`getopt -a -o a:ls:t:r:dhp:o: --longoptions add:,platform:,list,status:,test:,remove:,debug,help,override:  -n 'bosco_cluster' -- "$@"`
 
     if [ $? != 0 ]; then usage; echo "Terminating..." >&2; exit 1; fi
 fi
@@ -754,6 +752,7 @@ override_dir=
 while true; do
     case "$1" in
         -h|--help) usage; exit 1; shift ;;
+        -d|--debug) debug=1; shift;;
         -p|--platform) platform_force=$2; shift 2;;
         -a|--add) remote_host=$2; shift 2; break;;
         -l|--list) list $2
@@ -762,7 +761,6 @@ while true; do
                    fi
                    exit 0 ;;
         -s|--status) get_status $2;  shift 2; exit 0 ;;
-        -k|--key) bosco_key=$2; shift 2;;
         -t|--test) test_cluster $2; exit 0 ;;
         -r|--remove) remove_cluster $2; exit 0;;
         -o|--override) override_dir=$2; shift 2;;
@@ -834,7 +832,9 @@ fi
 start_ssh
 
 # Quickly test the ssh
-qmgr_out=`ssh -vvvvv -o "PasswordAuthentication=no" $remote_host "pwd" 2>&1`
+ssh_opts='-o PasswordAuthentication=no'
+[[ $debug = 1 ]] && ssh_opts="$ssh_opts -vvv"
+qmgr_out=$(ssh $ssh_opts "$remote_host" "pwd" 2>&1)
 if [ $? -ne 0 ]; then
     echo "Password-less ssh to $remote_host did NOT work, even after adding the ssh-keys."
     echo "Does the remote resource allow password-less ssh?"
@@ -1074,4 +1074,3 @@ EOM
 
 
 fi
-
