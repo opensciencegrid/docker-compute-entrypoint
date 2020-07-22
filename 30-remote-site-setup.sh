@@ -93,7 +93,7 @@ if [[ -n $OVERRIDE_DIR ]]; then
     fi
 fi
 
-[[ -n "$REMOTE_BOSCO_DIR" ]] && bosco_cluster_opts+=(-b "$REMOTE_BOSCO_DIR")
+[[ $REMOTE_BOSCO_DIR ]] && bosco_cluster_opts+=(-b "$REMOTE_BOSCO_DIR")
 
 echo "Using Bosco tarball: $(bosco_findplatform --url)"
 for ruser in $users; do
