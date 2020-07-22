@@ -84,21 +84,23 @@ grep '^OSG_GRID="/cvmfs/oasis.opensciencegrid.org/osg-software/osg-wn-client' \
      /var/lib/osg/job-environment*.conf > /dev/null 2>&1
 cvmfs_wn_client=$?
 
-override_opts=()
+bosco_cluster_opts=()
 if [[ -n $OVERRIDE_DIR ]]; then
     if [[ -d $OVERRIDE_DIR ]]; then
-        override_opts=(-o "$OVERRIDE_DIR")
+        bosco_cluster_opts=(-o "$OVERRIDE_DIR")
     else
         echo "WARNING: $OVERRIDE_DIR is not a directory. Skipping Bosco override."
     fi
 fi
+
+[[ $REMOTE_BOSCO_DIR ]] && bosco_cluster_opts+=(-b "$REMOTE_BOSCO_DIR")
 
 echo "Using Bosco tarball: $(bosco_findplatform --url)"
 for ruser in $users; do
     setup_ssh_config
     [[ $cvmfs_wn_client -eq 0 ]] || setup_endpoints_ini
     # $REMOTE_BATCH needs to be specified in the environment
-    bosco_cluster "${override_opts[@]}" -a "${ruser}@$REMOTE_HOST" "$REMOTE_BATCH"
+    bosco_cluster "${bosco_cluster_opts[@]}" -a "${ruser}@$REMOTE_HOST" "$REMOTE_BATCH"
 done
 
 [[ $cvmfs_wn_client -eq 0 ]] || sudo -u condor update-all-remote-wn-clients --log-dir /var/log/condor-ce/
