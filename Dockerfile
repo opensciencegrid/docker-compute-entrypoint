@@ -4,13 +4,15 @@ LABEL maintainer "OSG Software <help@opensciencegrid.org>"
 RUN yum install -y --enablerepo=osg-minefield \
                    --enablerepo=osg-upcoming-minefield \
                    osg-ce-bosco \
-                   htcondor-ce-view \
                    git \
                    openssh-clients \
                    sudo \
                    wget \
                    certbot \
                    patch && \
+   # Separate CE View installation to work around Yum depsolving fail
+   yum install -y --enablerepo=osg-minefield \
+                   htcondor-ce-view && \
     yum clean all && \
     rm -rf /var/cache/yum/
 
