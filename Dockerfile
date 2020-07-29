@@ -10,6 +10,9 @@ RUN yum install -y --enablerepo=osg-minefield \
                    wget \
                    certbot \
                    patch && \
+   # Separate CE View installation to work around Yum depsolving fail
+   yum install -y --enablerepo=osg-minefield \
+                   htcondor-ce-view && \
     yum clean all && \
     rm -rf /var/cache/yum/
 
