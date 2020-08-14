@@ -93,7 +93,8 @@ if [[ -n $OVERRIDE_DIR ]]; then
     fi
 fi
 
-[[ $REMOTE_BOSCO_DIR ]] && bosco_cluster_opts+=(-b "$REMOTE_BOSCO_DIR")
+[[ $REMOTE_BOSCO_DIR ]] && bosco_cluster_opts+=(-b "$REMOTE_BOSCO_DIR") \
+        || REMOTE_BOSCO_DIR=bosco
 
 echo "Using Bosco tarball: $(bosco_findplatform --url)"
 for ruser in $users; do
@@ -101,6 +102,10 @@ for ruser in $users; do
     [[ $cvmfs_wn_client -eq 0 ]] || setup_endpoints_ini
     # $REMOTE_BATCH needs to be specified in the environment
     bosco_cluster "${bosco_cluster_opts[@]}" -a "${ruser}@$REMOTE_HOST" "$REMOTE_BATCH"
+
+    # Copy over environment files to allow for dynamic WN variables (SOFTWARE-4117)
+    rsync -av /var/lib/osg/osg-*job-environment.conf \
+          "${ruser}@$REMOTE_HOST:$REMOTE_BOSCO_DIR/glite/etc"
 done
 
 [[ $cvmfs_wn_client -eq 0 ]] || sudo -u condor update-all-remote-wn-clients --log-dir /var/log/condor-ce/
