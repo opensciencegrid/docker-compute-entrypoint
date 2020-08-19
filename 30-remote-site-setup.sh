@@ -3,7 +3,7 @@
 BOSCO_KEY=/etc/osg/bosco.key
 # $REMOTE_HOST needs to be specified in the environment
 remote_fqdn=${REMOTE_HOST%:*}
-if [[ "$REMOTE_HOST" =~ .*:[0-9]*$ ]]; then
+if [[ $REMOTE_HOST =~ :[0-9]+$ ]]; then
     remote_port=${REMOTE_HOST#*:}
 else
     remote_port=22
