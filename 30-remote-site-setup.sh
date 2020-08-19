@@ -28,7 +28,8 @@ setup_ssh_config () {
   cat <<EOF > $ssh_dir/config
 IdentitiesOnly yes
 IdentityFile ${ssh_key}
-Port $remote_port
+Host $remote_fqdn
+  Port $remote_port
 EOF
 
   # setup known hosts
@@ -67,7 +68,8 @@ mkdir -p $root_ssh_dir
 chmod 700 $root_ssh_dir
 cat <<EOF > $root_ssh_dir/config
 IdentityFile ${BOSCO_KEY}
-Port $remote_port
+Host $remote_fqdn
+  Port $remote_port
 EOF
 echo $REMOTE_HOST_KEY >> $root_ssh_dir/known_hosts
 
