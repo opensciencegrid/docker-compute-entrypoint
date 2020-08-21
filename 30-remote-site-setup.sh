@@ -2,7 +2,13 @@
 
 BOSCO_KEY=/etc/osg/bosco.key
 # $REMOTE_HOST needs to be specified in the environment
-REMOTE_HOST_KEY=`ssh-keyscan -H "$REMOTE_HOST"`
+remote_fqdn=${REMOTE_HOST%:*}
+if [[ $REMOTE_HOST =~ :[0-9]+$ ]]; then
+    remote_port=${REMOTE_HOST#*:}
+else
+    remote_port=22
+fi
+REMOTE_HOST_KEY=`ssh-keyscan -p "$remote_port" -H "$remote_fqdn"`
 ENDPOINT_CONFIG=/etc/endpoints.ini
 
 setup_ssh_config () {
@@ -22,6 +28,8 @@ setup_ssh_config () {
   cat <<EOF > $ssh_dir/config
 IdentitiesOnly yes
 IdentityFile ${ssh_key}
+Host $remote_fqdn
+  Port $remote_port
 EOF
 
   # setup known hosts
@@ -38,8 +46,8 @@ EOF
 # Install the WN client, CAs, and CRLs on the remote host
 # Store logs in /var/log/condor-ce/ to simplify serving logs via Kubernetes
 setup_endpoints_ini () {
-    remote_home_dir=$(ssh -q -i $BOSCO_KEY "${ruser}@$REMOTE_HOST" pwd)
-    remote_os_ver=$(ssh -q -i $BOSCO_KEY "${ruser}@$REMOTE_HOST" "rpm -E %rhel")
+    remote_home_dir=$(ssh -q -i $BOSCO_KEY "${ruser}@$remote_fqdn" pwd)
+    remote_os_ver=$(ssh -q -i $BOSCO_KEY "${ruser}@$remote_fqdn" "rpm -E %rhel")
     osg_ver=3.4
     if [[ $remote_os_ver -gt 6 ]]; then
         osg_ver=3.5
@@ -47,7 +55,7 @@ setup_endpoints_ini () {
     cat <<EOF >> $ENDPOINT_CONFIG
 [Endpoint ${RESOURCE_NAME}-${ruser}]
 local_user = ${ruser}
-remote_host = $REMOTE_HOST
+remote_host = $remote_fqdn
 remote_user = ${ruser}
 remote_dir = $remote_home_dir/bosco-osg-wn-client
 upstream_url = https://repo.opensciencegrid.org/tarball-install/${osg_ver}/osg-wn-client-latest.el${remote_os_ver}.x86_64.tar.gz
@@ -58,7 +66,11 @@ EOF
 root_ssh_dir=/root/.ssh/
 mkdir -p $root_ssh_dir
 chmod 700 $root_ssh_dir
-echo "IdentityFile ${BOSCO_KEY}" > $root_ssh_dir/config
+cat <<EOF > $root_ssh_dir/config
+IdentityFile ${BOSCO_KEY}
+Host $remote_fqdn
+  Port $remote_port
+EOF
 echo $REMOTE_HOST_KEY >> $root_ssh_dir/known_hosts
 
 # Populate the bosco override dir from a Git repo
@@ -101,7 +113,7 @@ for ruser in $users; do
     setup_ssh_config
     [[ $cvmfs_wn_client -eq 0 ]] || setup_endpoints_ini
     # $REMOTE_BATCH needs to be specified in the environment
-    bosco_cluster "${bosco_cluster_opts[@]}" -a "${ruser}@$REMOTE_HOST" "$REMOTE_BATCH"
+    bosco_cluster "${bosco_cluster_opts[@]}" -a "${ruser}@$remote_fqdn" "$REMOTE_BATCH"
 
     # Copy over environment files to allow for dynamic WN variables (SOFTWARE-4117)
     rsync -av /var/lib/osg/osg-*job-environment.conf \
