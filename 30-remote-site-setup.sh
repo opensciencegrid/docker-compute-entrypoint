@@ -27,9 +27,9 @@ setup_ssh_config () {
   chown "${ruser}": $ssh_key
   cat <<EOF > $ssh_dir/config
 IdentitiesOnly yes
-IdentityFile ${ssh_key}
 Host $remote_fqdn
   Port $remote_port
+  IdentityFile ${ssh_key}
 EOF
 
   # setup known hosts
@@ -67,9 +67,9 @@ root_ssh_dir=/root/.ssh/
 mkdir -p $root_ssh_dir
 chmod 700 $root_ssh_dir
 cat <<EOF > $root_ssh_dir/config
-IdentityFile ${BOSCO_KEY}
 Host $remote_fqdn
   Port $remote_port
+  IdentityFile ${BOSCO_KEY}
 EOF
 echo $REMOTE_HOST_KEY >> $root_ssh_dir/known_hosts
 
