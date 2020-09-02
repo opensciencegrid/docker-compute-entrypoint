@@ -239,6 +239,7 @@ def main():
         help="remote directory the WN client will be placed in. [default: %default]",
     )
     parser.add_option("--ssh-key", help="SSH key to use to log in with")
+    parser.add_option("--dry-run", action="store_true", help="Do not deploy to remote host")
     opts, args = parser.parse_args()
     if len(args) != 1:
         parser.error("incorrect number of arguments")
@@ -251,9 +252,10 @@ def main():
         log.error("Error invoking rsync: %s", e)
         return 1
 
-    if not check_connectivity(opts.remote_user, remote_host, opts.ssh_key):
-        log.error("Could not connect to remote host")
-        return 1
+    if not opts.dry_run:
+        if not check_connectivity(opts.remote_user, remote_host, opts.ssh_key):
+            log.error("Could not connect to remote host")
+            return 1
 
     with working_dir() as wd:
         try:
@@ -280,8 +282,12 @@ def main():
             log.info("Fetching CRLs")
             update_crls(cert_dir)
 
-            log.info("Uploading")
-            rsync_upload(deploy_client_dir, opts.remote_user, remote_host, opts.remote_dir, opts.ssh_key)
+            if opts.dry_run:
+                log.info("Not uploading; would run:")
+                log.info("rsync_upload(%r, %r, %r, %r, %r)" % (deploy_client_dir, opts.remote_user, remote_host, opts.remote_dir, opts.ssh_key))
+            else:
+                log.info("Uploading")
+                rsync_upload(deploy_client_dir, opts.remote_user, remote_host, opts.remote_dir, opts.ssh_key)
         except (EnvironmentError, CalledProcessError, Error) as e:
             log.error(e)
             return 1
