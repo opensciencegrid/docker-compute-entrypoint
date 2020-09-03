@@ -26,8 +26,8 @@ from subprocess import CalledProcessError, Popen, PIPE, STDOUT
 import sys
 import tempfile
 
-from six.moves import shlex_quote
-from six.moves import urllib
+# noinspection PyUnresolvedReferences
+from six.moves import shlex_quote, urllib
 
 
 devnull = open(os.devnull, "w+")
