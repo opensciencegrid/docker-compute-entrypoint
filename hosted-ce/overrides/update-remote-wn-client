@@ -30,6 +30,10 @@ import tempfile
 from six.moves import shlex_quote, urllib
 
 
+OSG_CA_SCRIPTS_REPO = "https://github.com/opensciencegrid/osg-ca-scripts"
+OSG_CA_SCRIPTS_BRANCH = "latest"
+
+
 devnull = open(os.devnull, "w+")
 log = logging.getLogger(__name__)
 
@@ -56,40 +60,21 @@ def download_to_file(uri, outfile):
         raise Error("Unable to save downloaded file to %s: %s" % (outfile, err))
 
 
-def setup_cas(wn_client, osgrun, cert_dir):
+def setup_cas(osg_ca_scripts_dir, cert_dir):
     "Run osg-ca-manage setupCA"
 
-    # Unfortunately, if we specify a location to osg-ca-manage setupCA, it
-    # always wants to create a symlink from
-    # $OSG_LOCATION/etc/grid-security/certificates to that location.  Since we
-    # do not want to mess up the tarball install we're using, we must first
-    # save the symlink that's already there, then run osg-ca-manage, then
-    # restore it.
-    certs_link = os.path.join(wn_client, "etc/grid-security/certificates")
-    certs_link_save = certs_link + ".save"
-
-    # Note that in a proper tarball install, certs_link should already exist
-    # but handle its nonexistence gracefully too.
-    # Note the need to use 'lexists' since 'exists' returns False if the path
-    # is a broken symlink.
-    if os.path.lexists(certs_link):
-        if os.path.lexists(certs_link_save):
-            os.unlink(certs_link_save)
-        os.rename(certs_link, certs_link_save)
+    environ = os.environ.copy()
+    environ["OSG_LOCATION"] = osg_ca_scripts_dir
+    environ["PERL5LIB"] = "%s:%s/lib" % (environ.get("PERL5LIB", ""), osg_ca_scripts_dir)
 
     # osg-ca-manage always puts the certs into a subdirectory called 'certificates'
     # under the location specified here. So specify the parent of cert_dir as --location.
-    command = [osgrun, "osg-ca-manage"]
+    command = ["./sbin/osg-ca-manage"]
     command += ["setupCA"]
     command += ["--location", os.path.dirname(cert_dir)]
     command += ["--url", "osg"]
-    try:
-        subprocess.check_call(command)
-    finally:
-        if os.path.lexists(certs_link_save):
-            if os.path.lexists(certs_link):
-                os.unlink(certs_link)
-            os.rename(certs_link_save, certs_link)
+    with chdir(osg_ca_scripts_dir):
+        subprocess.check_call(command, env=environ)
 
 
 def update_cas(osgrun, cert_dir):
@@ -204,6 +189,16 @@ def rsync_upload(local_dir, remote_user, remote_host, remote_dir, ssh_key=None):
         raise Error("Error renaming remote directories: %s" % e)
 
 
+def setup_osg_ca_scripts_dir(osg_ca_scripts_dir):
+    subprocess.check_call([
+        "git", "clone", "-b", OSG_CA_SCRIPTS_BRANCH, OSG_CA_SCRIPTS_REPO, osg_ca_scripts_dir
+    ])
+    with chdir(osg_ca_scripts_dir):
+        os.symlink(".", "usr")
+        os.mkdir("etc/osg")
+        os.symlink("../osg-update-certs.conf", "etc/osg/osg-update-certs.conf")
+
+
 @contextlib.contextmanager
 def working_dir(*args, **kwargs):
     """Resource manager for creating a temporary directory, cd'ing into it,
@@ -218,11 +213,13 @@ def working_dir(*args, **kwargs):
     shutil.rmtree(wd)
 
 
-# Because paths are embedded into the WN-client installation, two copies
-# of the client are used: the "deploy" client, which will be rsynced to the
-# worker node, and the "fetch" client, which will be used to download CAs
-# and CRLs.  The "fetch" client will put the CAs and CRLs into the certificate
-# dir of the "deploy" client.
+@contextlib.contextmanager
+def chdir(directory):
+    """Resource manager for cd'ing into an existing directory and going back to the old directory afterward."""
+    olddir = os.getcwd()
+    os.chdir(directory)
+    yield
+    os.chdir(olddir)
 
 
 def main():
@@ -267,18 +264,15 @@ def main():
             deploy_client_dir = os.path.join(wd, "deploy/osg-wn-client")
             cert_dir = os.path.join(deploy_client_dir, "etc/grid-security/certificates")
 
-            os.mkdir("fetch")
-            subprocess.check_call(["tar", "-C", "fetch", "-xzf", "osg-wn-client.tar.gz"])
-            fetch_client_dir = os.path.join(wd, "fetch/osg-wn-client")
+            osg_ca_scripts_dir = os.path.join(wd, "osg-ca-scripts")
+            setup_osg_ca_scripts_dir(osg_ca_scripts_dir)
 
             log.info("Setting up tarball dirs")
             subprocess.check_call([os.path.join(deploy_client_dir, "osg/osg-post-install"),
                                    "-f", opts.remote_dir])
-            subprocess.check_call([os.path.join(fetch_client_dir, "osg/osg-post-install")])
-            osgrun = os.path.join(fetch_client_dir, "osgrun")
 
             log.info("Fetching CAs")
-            setup_cas(fetch_client_dir, osgrun, cert_dir)
+            setup_cas(osg_ca_scripts_dir, cert_dir)
             log.info("Fetching CRLs")
             update_crls(cert_dir)
 
