@@ -61,8 +61,15 @@ def download_to_file(uri, outfile):
 
 
 def setup_cas(osg_ca_scripts_dir, cert_dir):
-    "Run osg-ca-manage setupCA"
+    """Run osg-ca-manage setupCA from a git clone of osg-ca-scripts.
 
+    This will write CA certificates into cert_dir.  As a side effect, it will
+    also create a symlink in osg_ca_scripts_dir/etc/grid-security/certificates
+    but we can ignore that.
+
+    """
+    if not cert_dir.endswith("certificates"):  # required by osg-ca-manage
+        raise ValueError("cert_dir %r does not end in certificates" % cert_dir)
     environ = os.environ.copy()
     environ["OSG_LOCATION"] = osg_ca_scripts_dir
     environ["PERL5LIB"] = "%s:%s/lib" % (environ.get("PERL5LIB", ""), osg_ca_scripts_dir)
@@ -75,10 +82,6 @@ def setup_cas(osg_ca_scripts_dir, cert_dir):
     command += ["--url", "osg"]
     with chdir(osg_ca_scripts_dir):
         subprocess.check_call(command, env=environ)
-
-
-def update_cas(osgrun, cert_dir):
-    subprocess.check_call([osgrun, "osg-ca-manage", "--cert-dir", cert_dir, "refreshCA"])
 
 
 def update_crls(cert_dir):
@@ -190,9 +193,18 @@ def rsync_upload(local_dir, remote_user, remote_host, remote_dir, ssh_key=None):
 
 
 def setup_osg_ca_scripts_dir(osg_ca_scripts_dir):
+    """Clones the osg-ca-scripts repo and sets up dirs and symlinks to allow
+    running the script right from the git checkout.
+
+    """
     subprocess.check_call([
         "git", "clone", "-b", OSG_CA_SCRIPTS_BRANCH, OSG_CA_SCRIPTS_REPO, osg_ca_scripts_dir
     ])
+    # osg-ca-manage can be run right from the git checkout with a few tweaks:
+    # - Need to set $OSG_LOCATION to the root of the checkout (handled in setup_cas())
+    # - Config file must be in $OSG_LOCATION/etc/osg/osg-update-certs.conf
+    # - osg-setup-ca-certificates must be in $OSG_LOCATION/usr/libexec
+    # - OSGCerts.pem must be in Perl path (handled in setup_cas())
     with chdir(osg_ca_scripts_dir):
         os.symlink(".", "usr")
         os.mkdir("etc/osg")
@@ -215,7 +227,10 @@ def working_dir(*args, **kwargs):
 
 @contextlib.contextmanager
 def chdir(directory):
-    """Resource manager for cd'ing into an existing directory and going back to the old directory afterward."""
+    """Resource manager for cd'ing into an existing directory
+    and going back to the old directory afterward.
+
+    """
     olddir = os.getcwd()
     os.chdir(directory)
     yield
