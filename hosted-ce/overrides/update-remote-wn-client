@@ -18,6 +18,7 @@ the remote host.
 from __future__ import print_function
 import contextlib
 import logging
+import time
 from optparse import OptionParser
 import os
 import shutil
@@ -197,9 +198,18 @@ def setup_osg_ca_scripts_dir(osg_ca_scripts_dir):
     running the script right from the git checkout.
 
     """
-    subprocess.check_call([
-        "git", "clone", "-b", OSG_CA_SCRIPTS_BRANCH, OSG_CA_SCRIPTS_REPO, osg_ca_scripts_dir
-    ])
+    retries = 3
+    while retries > 0:
+        ret = subprocess.call([
+            "git", "clone", "-b", OSG_CA_SCRIPTS_BRANCH, OSG_CA_SCRIPTS_REPO, osg_ca_scripts_dir
+        ])
+        if ret == 0:
+            break
+        if retries > 0:
+            log.warning("git clone failed; retrying")
+            time.sleep(30)
+        else:
+            raise Error("git clone failed")
     # osg-ca-manage can be run right from the git checkout with a few tweaks:
     # - Need to set $OSG_LOCATION to the root of the checkout (handled in setup_cas())
     # - Config file must be in $OSG_LOCATION/etc/osg/osg-update-certs.conf
