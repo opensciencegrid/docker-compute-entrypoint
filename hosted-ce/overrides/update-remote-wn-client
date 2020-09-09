@@ -69,7 +69,7 @@ def setup_cas(osg_ca_scripts_dir, cert_dir):
     but we can ignore that.
 
     """
-    if not cert_dir.endswith("certificates"):  # required by osg-ca-manage
+    if os.path.basename(cert_dir) != "certificates":  # required by osg-ca-manage
         raise ValueError("cert_dir %r does not end in certificates" % cert_dir)
     environ = os.environ.copy()
     environ["OSG_LOCATION"] = osg_ca_scripts_dir
@@ -205,8 +205,9 @@ def setup_osg_ca_scripts_dir(osg_ca_scripts_dir):
         ])
         if ret == 0:
             break
+        retries -= 1
         if retries > 0:
-            log.warning("git clone failed; retrying")
+            log.warning("git clone failed; retrying in 30 seconds")
             time.sleep(30)
         else:
             raise Error("git clone failed")
