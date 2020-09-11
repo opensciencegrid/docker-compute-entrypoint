@@ -96,10 +96,11 @@ grep '^OSG_GRID="/cvmfs/oasis.opensciencegrid.org/osg-software/osg-wn-client' \
      /var/lib/osg/job-environment*.conf > /dev/null 2>&1
 cvmfs_wn_client=$?
 
-bosco_cluster_opts=()
+# Enable bosco_cluster debug output
+bosco_cluster_opts=(-d )
 if [[ -n $OVERRIDE_DIR ]]; then
     if [[ -d $OVERRIDE_DIR ]]; then
-        bosco_cluster_opts=(-o "$OVERRIDE_DIR")
+        bosco_cluster_opts+=(-o "$OVERRIDE_DIR")
     else
         echo "WARNING: $OVERRIDE_DIR is not a directory. Skipping Bosco override."
     fi
