@@ -25,7 +25,13 @@ GIT_SSH_KEY=$3
 if [[ $GIT_ENDPOINT =~ ^([A-Za-z0-9_-]+)@([^:]+): ]]; then
     GIT_USER="${BASH_REMATCH[1]}"
     GIT_HOST="${BASH_REMATCH[2]}"
-    ssh-keyscan "$GIT_HOST" >> ~/.ssh/known_hosts || errexit "Failed to determine host key for $GIT_HOST"
+    GIT_HOST_KEY=$(ssh-keyscan "$GIT_HOST")
+    if [[ -n $GIT_HOST_KEY ]]; then
+        echo $GIT_HOST_KEY >> ~/.ssh/known_hosts
+    else
+        errexit "Failed to determine host key for $GIT_HOST"
+    fi
+
     if [[ -f "$GIT_SSH_KEY" ]]; then
         cat <<EOF >> ~/.ssh/config
 
