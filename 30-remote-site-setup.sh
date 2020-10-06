@@ -11,6 +11,11 @@ fi
 REMOTE_HOST_KEY=`ssh-keyscan -p "$remote_port" -H "$remote_fqdn"`
 ENDPOINT_CONFIG=/etc/endpoints.ini
 
+function errexit {
+    echo "$1" >&2
+    exit 1
+}
+
 setup_ssh_config () {
   echo "Adding user ${ruser}"
   ssh_dir="/home/${ruser}/.ssh"
@@ -83,7 +88,7 @@ unset GIT_SSH_COMMAND
 users=$(cat /etc/grid-security/grid-mapfile /etc/grid-security/voms-mapfile | \
             awk '/^"[^"]+" +[a-zA-Z0-9\-\._]+$/ {print $NF}' | \
             sort -u)
-[[ -n $users ]] || exit 1
+[[ -n $users ]] || errexit "Did not find any user mappings in the VOMS or Grid mapfiles"
 
 # Allow the condor user to run the WN client updater as the local users
 CONDOR_SUDO_FILE=/etc/sudoers.d/10-condor-ssh
