@@ -98,8 +98,7 @@ echo "condor ALL = ($condor_sudo_users) NOPASSWD: /usr/bin/update-remote-wn-clie
 chmod 644 $CONDOR_SUDO_FILE
 
 grep '^OSG_GRID="/cvmfs/oasis.opensciencegrid.org/osg-software/osg-wn-client' \
-     /var/lib/osg/job-environment*.conf > /dev/null 2>&1
-cvmfs_wn_client=$?
+     /var/lib/osg/job-environment*.conf > /dev/null 2>&1 || cvmfs_wn_client=no
 
 # Enable bosco_cluster debug output
 bosco_cluster_opts=(-d )
@@ -117,7 +116,7 @@ fi
 echo "Using Bosco tarball: $(bosco_findplatform --url)"
 for ruser in $users; do
     setup_ssh_config
-    [[ $cvmfs_wn_client -eq 0 ]] || setup_endpoints_ini
+    [[ $cvmfs_wn_client == 'no' ]] || setup_endpoints_ini
     # $REMOTE_BATCH needs to be specified in the environment
     bosco_cluster "${bosco_cluster_opts[@]}" -a "${ruser}@$remote_fqdn" "$REMOTE_BATCH"
 
@@ -126,4 +125,9 @@ for ruser in $users; do
           "${ruser}@$REMOTE_HOST:$REMOTE_BOSCO_DIR/glite/etc"
 done
 
-[[ $cvmfs_wn_client -eq 0 ]] || sudo -u condor update-all-remote-wn-clients --log-dir /var/log/condor-ce/
+if [[ $cvmfs_wn_client == 'no' ]]; then
+    echo "Installing remote WN client tarballs..."
+    sudo -u condor update-all-remote-wn-clients --log-dir /var/log/condor-ce/
+else
+    echo "Skipping remote WN client tarball installation, using CVMFS..."
+fi
