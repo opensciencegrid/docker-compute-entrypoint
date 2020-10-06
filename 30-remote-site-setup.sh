@@ -1,14 +1,6 @@
 #!/bin/bash -xe
 
 BOSCO_KEY=/etc/osg/bosco.key
-# $REMOTE_HOST needs to be specified in the environment
-remote_fqdn=${REMOTE_HOST%:*}
-if [[ $REMOTE_HOST =~ :[0-9]+$ ]]; then
-    remote_port=${REMOTE_HOST#*:}
-else
-    remote_port=22
-fi
-REMOTE_HOST_KEY=`ssh-keyscan -p "$remote_port" -H "$remote_fqdn"`
 ENDPOINT_CONFIG=/etc/endpoints.ini
 
 function errexit {
@@ -66,6 +58,15 @@ remote_dir = $remote_home_dir/bosco-osg-wn-client
 upstream_url = https://repo.opensciencegrid.org/tarball-install/${osg_ver}/osg-wn-client-latest.el${remote_os_ver}.x86_64.tar.gz
 EOF
 }
+
+# $REMOTE_HOST needs to be specified in the environment
+remote_fqdn=${REMOTE_HOST%:*}
+if [[ $REMOTE_HOST =~ :[0-9]+$ ]]; then
+    remote_port=${REMOTE_HOST#*:}
+else
+    remote_port=22
+fi
+REMOTE_HOST_KEY=`ssh-keyscan -p "$remote_port" -H "$remote_fqdn"`
 
 # Set the appropriate SSH key for bosco_cluster commands
 root_ssh_dir=/root/.ssh/
