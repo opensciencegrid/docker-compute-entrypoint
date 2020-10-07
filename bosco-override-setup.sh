@@ -25,7 +25,13 @@ GIT_SSH_KEY=$3
 if [[ $GIT_ENDPOINT =~ ^([A-Za-z0-9_-]+)@([^:]+): ]]; then
     GIT_USER="${BASH_REMATCH[1]}"
     GIT_HOST="${BASH_REMATCH[2]}"
-    ssh-keyscan "${BASH_REMATCH[2]}" >> ~/.ssh/known_hosts
+    GIT_HOST_KEY=$(ssh-keyscan "$GIT_HOST")
+    if [[ -n $GIT_HOST_KEY ]]; then
+        echo $GIT_HOST_KEY >> ~/.ssh/known_hosts
+    else
+        errexit "Failed to determine host key for $GIT_HOST"
+    fi
+
     if [[ -f "$GIT_SSH_KEY" ]]; then
         cat <<EOF >> ~/.ssh/config
 
@@ -39,7 +45,7 @@ fi
 REPO_DIR=$(mktemp -d)
 OVERRIDE_DIR=/etc/condor-ce/bosco_override/
 
-git clone --depth=1 $GIT_ENDPOINT $REPO_DIR
+git clone --depth=1 $GIT_ENDPOINT $REPO_DIR || errexit "Failed to clone $GIT_ENDPOINT into $REPO_DIR"
 
 # Bosco override dirs are expected in the following location in the git repo:
 #   <RESOURCE NAME>/bosco_override/

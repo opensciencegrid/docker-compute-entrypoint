@@ -1,15 +1,12 @@
-#!/bin/bash -x
+#!/bin/bash -xe
 
 BOSCO_KEY=/etc/osg/bosco.key
-# $REMOTE_HOST needs to be specified in the environment
-remote_fqdn=${REMOTE_HOST%:*}
-if [[ $REMOTE_HOST =~ :[0-9]+$ ]]; then
-    remote_port=${REMOTE_HOST#*:}
-else
-    remote_port=22
-fi
-REMOTE_HOST_KEY=`ssh-keyscan -p "$remote_port" -H "$remote_fqdn"`
 ENDPOINT_CONFIG=/etc/endpoints.ini
+
+function errexit {
+    echo "$1" >&2
+    exit 1
+}
 
 setup_ssh_config () {
   echo "Adding user ${ruser}"
@@ -62,6 +59,17 @@ upstream_url = https://repo.opensciencegrid.org/tarball-install/${osg_ver}/osg-w
 EOF
 }
 
+# $REMOTE_HOST needs to be specified in the environment
+remote_fqdn=${REMOTE_HOST%:*}
+if [[ $REMOTE_HOST =~ :[0-9]+$ ]]; then
+    remote_port=${REMOTE_HOST#*:}
+else
+    remote_port=22
+fi
+
+REMOTE_HOST_KEY=`ssh-keyscan -p "$remote_port" -H "$remote_fqdn"`
+[[ -n $REMOTE_HOST_KEY ]] || errexit "Failed to determine host key for $remote_fqdn:$remote_port"
+
 # Set the appropriate SSH key for bosco_cluster commands
 root_ssh_dir=/root/.ssh/
 mkdir -p $root_ssh_dir
@@ -83,7 +91,7 @@ unset GIT_SSH_COMMAND
 users=$(cat /etc/grid-security/grid-mapfile /etc/grid-security/voms-mapfile | \
             awk '/^"[^"]+" +[a-zA-Z0-9\-\._]+$/ {print $NF}' | \
             sort -u)
-[[ -n $users ]] || exit 1
+[[ -n $users ]] || errexit "Did not find any user mappings in the VOMS or Grid mapfiles"
 
 # Allow the condor user to run the WN client updater as the local users
 CONDOR_SUDO_FILE=/etc/sudoers.d/10-condor-ssh
@@ -93,8 +101,7 @@ echo "condor ALL = ($condor_sudo_users) NOPASSWD: /usr/bin/update-remote-wn-clie
 chmod 644 $CONDOR_SUDO_FILE
 
 grep '^OSG_GRID="/cvmfs/oasis.opensciencegrid.org/osg-software/osg-wn-client' \
-     /var/lib/osg/job-environment*.conf > /dev/null 2>&1
-cvmfs_wn_client=$?
+     /var/lib/osg/job-environment*.conf > /dev/null 2>&1 || cvmfs_wn_client=no
 
 # Enable bosco_cluster debug output
 bosco_cluster_opts=(-d )
@@ -112,7 +119,7 @@ fi
 echo "Using Bosco tarball: $(bosco_findplatform --url)"
 for ruser in $users; do
     setup_ssh_config
-    [[ $cvmfs_wn_client -eq 0 ]] || setup_endpoints_ini
+    [[ $cvmfs_wn_client == 'no' ]] || setup_endpoints_ini
     # $REMOTE_BATCH needs to be specified in the environment
     bosco_cluster "${bosco_cluster_opts[@]}" -a "${ruser}@$remote_fqdn" "$REMOTE_BATCH"
 
@@ -121,4 +128,9 @@ for ruser in $users; do
           "${ruser}@$REMOTE_HOST:$REMOTE_BOSCO_DIR/glite/etc"
 done
 
-[[ $cvmfs_wn_client -eq 0 ]] || sudo -u condor update-all-remote-wn-clients --log-dir /var/log/condor-ce/
+if [[ $cvmfs_wn_client == 'no' ]]; then
+    echo "Installing remote WN client tarballs..."
+    sudo -u condor update-all-remote-wn-clients --log-dir /var/log/condor-ce/
+else
+    echo "Skipping remote WN client tarball installation, using CVMFS..."
+fi
