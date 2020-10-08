@@ -103,6 +103,9 @@ known_hosts=$root_ssh_dir/known_hosts
 echo "$REMOTE_HOST_KEY" >> "$known_hosts"
 debug_file_contents "$known_hosts"
 
+# Debug output of file permissions
+ls -l $root_ssh_dir
+
 # Populate the bosco override dir from a Git repo
 if [[ -n $BOSCO_GIT_ENDPOINT && -n $BOSCO_DIRECTORY ]]; then
     OVERRIDE_DIR=/etc/condor-ce/bosco_override
