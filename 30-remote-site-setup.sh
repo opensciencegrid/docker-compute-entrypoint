@@ -30,7 +30,7 @@ Host $remote_fqdn
 EOF
 
   # setup known hosts
-  echo $REMOTE_HOST_KEY >> $ssh_dir/known_hosts
+  echo "$REMOTE_HOST_KEY" >> $ssh_dir/known_hosts
 
   for ssh_file in $ssh_dir/config $ssh_dir/known_hosts; do
       chown "${ruser}": $ssh_file
@@ -79,7 +79,7 @@ Host $remote_fqdn
   Port $remote_port
   IdentityFile ${BOSCO_KEY}
 EOF
-echo $REMOTE_HOST_KEY >> $root_ssh_dir/known_hosts
+echo "$REMOTE_HOST_KEY" >> $root_ssh_dir/known_hosts
 
 # Populate the bosco override dir from a Git repo
 if [[ -n $BOSCO_GIT_ENDPOINT && -n $BOSCO_DIRECTORY ]]; then
