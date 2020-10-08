@@ -35,10 +35,10 @@ setup_ssh_config () {
 
   ssh_config=$ssh_dir/config
   cat <<EOF > "$ssh_config"
-IdentitiesOnly yes
 Host $remote_fqdn
   Port $remote_port
   IdentityFile ${ssh_key}
+  IdentitiesOnly yes
 EOF
   debug_file_contents "$ssh_config"
 
