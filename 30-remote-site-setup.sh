@@ -150,7 +150,7 @@ for ruser in $users; do
 
     # Copy over environment files to allow for dynamic WN variables (SOFTWARE-4117)
     rsync -av /var/lib/osg/osg-*job-environment.conf \
-          "${ruser}@$REMOTE_HOST:$REMOTE_BOSCO_DIR/glite/etc"
+          "${ruser}@$remote_fqdn:$REMOTE_BOSCO_DIR/glite/etc"
 done
 
 if [[ $cvmfs_wn_client == 'no' ]]; then
