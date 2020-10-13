@@ -144,7 +144,7 @@ fi
 echo "Using Bosco tarball: $(bosco_findplatform --url)"
 for ruser in $users; do
     setup_ssh_config
-    [[ $cvmfs_wn_client == 'no' ]] || setup_endpoints_ini
+    [[ $cvmfs_wn_client == 'no' ]] && setup_endpoints_ini
     # $REMOTE_BATCH needs to be specified in the environment
     bosco_cluster "${bosco_cluster_opts[@]}" -a "${ruser}@$remote_fqdn" "$REMOTE_BATCH"
 
