@@ -34,6 +34,9 @@ hostkey_path=/etc/grid-security/hostkey.pem
 hostcsr_path=/etc/grid-security/host.req
 
 certbot_opts="--noninteractive --agree-tos --standalone --email $CE_CONTACT -d $CE_HOSTNAME"
+
+[[ $LE_STAGING == "true" ]] && certbot_opts="$certbot_opts --dry-run"
+
 if [ ! -f $hostcert_path ] || [ ! -f $hostkey_path ]; then
     echo "Establishing Let's Encrypt certificate.."
     if [ -f $hostkey_path ]; then
