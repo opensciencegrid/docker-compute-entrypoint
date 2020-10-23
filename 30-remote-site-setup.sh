@@ -26,6 +26,11 @@ function debug_file_contents {
     echo "===================="
 }
 
+function fetch_remote_os_info {
+    ruser=$1
+    rhost=$2
+    ssh -q -i $BOSCO_KEY "${ruser}@$rhost" "cat /etc/os-release"
+}
 
 setup_ssh_config () {
   echo "Adding user ${ruser}"
@@ -68,10 +73,10 @@ EOF
 # Install the WN client, CAs, and CRLs on the remote host
 # Store logs in /var/log/condor-ce/ to simplify serving logs via Kubernetes
 setup_endpoints_ini () {
+    remote_os_major_ver=$1
     remote_home_dir=$(ssh -q -i $BOSCO_KEY "${ruser}@$remote_fqdn" pwd)
-    remote_os_ver=$(ssh -q -i $BOSCO_KEY "${ruser}@$remote_fqdn" "rpm -E %rhel")
     osg_ver=3.4
-    if [[ $remote_os_ver -gt 6 ]]; then
+    if [[ $remote_os_major_ver -gt 6 ]]; then
         osg_ver=3.5
     fi
     cat <<EOF >> $ENDPOINT_CONFIG
@@ -80,7 +85,7 @@ local_user = ${ruser}
 remote_host = $remote_fqdn
 remote_user = ${ruser}
 remote_dir = $remote_home_dir/bosco-osg-wn-client
-upstream_url = https://repo.opensciencegrid.org/tarball-install/${osg_ver}/osg-wn-client-latest.el${remote_os_ver}.x86_64.tar.gz
+upstream_url = https://repo.opensciencegrid.org/tarball-install/${osg_ver}/osg-wn-client-latest.el${remote_os_major_ver}.x86_64.tar.gz
 EOF
 }
 
@@ -153,7 +158,18 @@ fi
 echo "Using Bosco tarball: $(bosco_findplatform --url)"
 for ruser in $users; do
     setup_ssh_config
-    [[ $cvmfs_wn_client == 'no' ]] && setup_endpoints_ini
+done
+
+###################
+# REMOTE COMMANDS #
+###################
+
+# We have to pick a user for SSH, may as well be the first one
+remote_os_info=$(fetch_remote_os_info "${users%%[:blank:]*}" "$remote_fqdn")
+remote_os_ver=$(echo "$remote_os_info" | awk -F '=' '/^VERSION_ID/ {print $2}' | tr -d '"')
+
+for ruser in $users; do
+    [[ $cvmfs_wn_client == 'no' ]] && setup_endpoints_ini "${remote_os_ver%%.*}"
     # $REMOTE_BATCH needs to be specified in the environment
     bosco_cluster "${bosco_cluster_opts[@]}" -a "${ruser}@$remote_fqdn" "$REMOTE_BATCH"
 
