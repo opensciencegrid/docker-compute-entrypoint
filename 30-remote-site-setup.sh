@@ -1,4 +1,13 @@
-#!/bin/bash -xe
+#!/bin/bash -x
+
+# save old -e status
+if [[ $- = *e* ]]; then
+    olde=-e
+else
+    olde=+e
+fi
+
+set -e
 
 BOSCO_KEY=/etc/osg/bosco.key
 ENDPOINT_CONFIG=/etc/endpoints.ini
@@ -159,3 +168,6 @@ if [[ $cvmfs_wn_client == 'no' ]]; then
 else
     echo "Skipping remote WN client tarball installation, using CVMFS..."
 fi
+
+set $olde
+
