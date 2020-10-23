@@ -29,7 +29,7 @@ function debug_file_contents {
 function fetch_remote_os_info {
     ruser=$1
     rhost=$2
-    ssh -q -i $BOSCO_KEY "${ruser}@$rhost" "cat /etc/os-release"
+    ssh -q -i $BOSCO_KEY "$ruser@$rhost" "cat /etc/os-release"
 }
 
 setup_ssh_config () {
