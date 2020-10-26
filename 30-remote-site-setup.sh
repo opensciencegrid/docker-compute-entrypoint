@@ -165,7 +165,7 @@ done
 ###################
 
 # We have to pick a user for SSH, may as well be the first one
-remote_os_info=$(fetch_remote_os_info "$(echo $users | head -n1)" "$remote_fqdn")
+remote_os_info=$(fetch_remote_os_info "$(printf "%s\n" $users | head -n1)" "$remote_fqdn")
 remote_os_ver=$(echo "$remote_os_info" | awk -F '=' '/^VERSION_ID/ {print $2}' | tr -d '"')
 
 for ruser in $users; do
@@ -186,4 +186,3 @@ else
 fi
 
 set $olde
-
