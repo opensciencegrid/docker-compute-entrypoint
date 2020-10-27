@@ -73,6 +73,7 @@ EOF
 # Install the WN client, CAs, and CRLs on the remote host
 # Store logs in /var/log/condor-ce/ to simplify serving logs via Kubernetes
 setup_endpoints_ini () {
+    echo "Setting up endpoint.ini entry for ${ruser}@$remote_fqdn..."
     remote_os_major_ver=$1
     remote_home_dir=$(ssh -q -i $BOSCO_KEY "${ruser}@$remote_fqdn" pwd)
     osg_ver=3.4
@@ -169,10 +170,12 @@ remote_os_info=$(fetch_remote_os_info "$(printf "%s\n" $users | head -n1)" "$rem
 remote_os_ver=$(echo "$remote_os_info" | awk -F '=' '/^VERSION_ID/ {print $2}' | tr -d '"')
 
 for ruser in $users; do
+    echo "Installing remote Bosco installation for ${ruser}@$remote_fqdn"
     [[ $cvmfs_wn_client == 'no' ]] && setup_endpoints_ini "${remote_os_ver%%.*}"
     # $REMOTE_BATCH needs to be specified in the environment
     bosco_cluster "${bosco_cluster_opts[@]}" -a "${ruser}@$remote_fqdn" "$REMOTE_BATCH"
 
+    echo "Installing environment files for $ruser@$remote_fqdn..."
     # Copy over environment files to allow for dynamic WN variables (SOFTWARE-4117)
     rsync -av /var/lib/osg/osg-*job-environment.conf \
           "${ruser}@$remote_fqdn:$REMOTE_BOSCO_DIR/glite/etc"
