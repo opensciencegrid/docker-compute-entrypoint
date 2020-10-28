@@ -113,6 +113,7 @@ Host $remote_fqdn
   Port $remote_port
   IdentityFile ${BOSCO_KEY}
 EOF
+chmod 700 $ssh_config
 debug_file_contents "$ssh_config"
 
 known_hosts=$root_ssh_dir/known_hosts
