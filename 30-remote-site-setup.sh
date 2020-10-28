@@ -1,4 +1,6 @@
-#!/bin/bash -x
+#!/bin/bash
+
+set -x
 
 # save old -e status
 if [[ $- = *e* ]]; then
