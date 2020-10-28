@@ -775,6 +775,7 @@ while true; do
     esac
 done
 
+[[ $debug -eq 1 ]] && set -x
 
 ################################################################
 # The rest of the file covers the 'add' cluster functionality.
