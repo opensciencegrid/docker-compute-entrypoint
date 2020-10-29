@@ -1,4 +1,5 @@
 #!/bin/sh
+# Script to drain the CE and upload accounting data to prepare for container teardown
 
 # Configure to refuse all incoming jobs
 echo "SUBMIT_REQUIREMENT_DRAIN = False" > /usr/share/condor-ce/config.d/99-drain.conf
