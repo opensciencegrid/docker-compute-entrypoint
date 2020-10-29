@@ -27,6 +27,6 @@ RUN chmod 644 /etc/cron.d/fetch-crl
 
 # HACK: override condor_ce_jobmetrics from SOFTWARE-4183 until it is released in
 # HTCondor-CE.
-ADD overrides/condor_ce_jobmetrics /usr/share/condor-ce/condor_ce_jobmetrics
+COPY overrides/condor_ce_jobmetrics /usr/share/condor-ce/condor_ce_jobmetrics
 
 ENTRYPOINT ["/usr/local/sbin/supervisord_startup.sh"]
