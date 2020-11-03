@@ -199,8 +199,8 @@ def main():
 
     ret = 0
     for section in sections_list:
-        error = call_updater(cfg, section, updater_script, opts.log_dir, opts.dry_run)
-        if error:
+        ok = call_updater(cfg, section, updater_script, opts.log_dir, opts.dry_run)
+        if not ok:
             ret = 1
 
     return ret
