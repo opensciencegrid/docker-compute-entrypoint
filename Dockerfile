@@ -5,6 +5,11 @@ FROM opensciencegrid/software-base:$SW_BASE_TAG
 
 LABEL maintainer "OSG Software <help@opensciencegrid.org>"
 
+# Ensure that the 'condor' UID/GID matches across containers
+RUN groupadd -g 64 -r condor && \
+    useradd -r -g condor -d /var/lib/condor -s /sbin/nologin \
+      -u 64 -c "Owner of HTCondor Daemons" condor
+
 RUN yum install -y --enablerepo=osg-minefield \
                    --enablerepo=osg-upcoming-minefield \
                    osg-ce-bosco \
