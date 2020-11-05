@@ -28,3 +28,20 @@ jobs:
         password: ${{ secrets.DOCKER_PASSWORD }}
         repository: opensciencegrid/compute-entrypoint
         tags: fresh, ${{ steps.mkdatetag.outputs.dtag }}
+
+  dispatch:
+    runs-on: ubuntu-latest
+    if: github.repository == 'opensciencegrid/docker-compute-entrypoint'
+    needs: build
+    strategy:
+      matrix:
+        dispatch-repo:
+        - docker-osg-ce
+    steps:
+
+    - name: dispatch build ${{ matrix.dispatch-repo }}
+      uses: peter-evans/repository-dispatch@v1
+      with:
+        token: ${{ secrets.REPO_ACCESS_TOKEN }}
+        repository: opensciencegrid/${{ matrix.dispatch-repo }}
+        event-type: dispatch-build
