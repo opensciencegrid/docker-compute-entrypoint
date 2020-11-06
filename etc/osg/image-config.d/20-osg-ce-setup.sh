@@ -3,7 +3,7 @@
 . ce-common-startup
 
 users=$(get_mapped_users)
-for user in "$users"; do
+for user in $users; do
     echo "Creating local user ($user)..."
     adduser --base-dir /home/ "$user"
 done
