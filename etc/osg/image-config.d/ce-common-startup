@@ -1,0 +1,6 @@
+# Return list of local users mapped from grid credentials
+function get_mapped_users () {
+    cat /etc/grid-security/grid-mapfile /etc/grid-security/voms-mapfile | \
+        awk '/^"[^"]+" +[a-zA-Z0-9\-\._]+$/ {print $NF}' | \
+        sort -u
+}
