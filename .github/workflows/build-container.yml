@@ -36,7 +36,7 @@ jobs:
     strategy:
       matrix:
         dispatch-repo:
-        - docker-osg-ce
+        - docker-osg-ce-condor
     steps:
 
     - name: dispatch build ${{ matrix.dispatch-repo }}
