@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. ce-common-startup
+. /etc/osg/image-config.d/ce-common-startup
 
 users=$(get_mapped_users)
 for user in $users; do
