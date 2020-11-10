@@ -1,5 +1,13 @@
 #!/bin/bash
 
+. /etc/osg/image-config.d/ce-common-startup
+
+users=$(get_mapped_users)
+for user in $users; do
+    echo "Creating local user ($user)..."
+    adduser --base-dir /home/ "$user"
+done
+
 #kubernetes configmaps arent writeable
 stat /tmp/99-local.ini
 if [[ $? -eq 0 ]]; then
