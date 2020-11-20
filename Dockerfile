@@ -18,6 +18,8 @@ RUN yum install -y --enablerepo=osg-minefield \
                    sudo \
                    wget \
                    certbot \
+                   perl-LWP-Protocol-https \
+                   # ^^^ for fetch-crl, in the rare case that the CA forces HTTPS
                    patch && \
    # Separate CE View installation to work around Yum depsolving fail
    yum install -y --enablerepo=osg-minefield \
