@@ -60,3 +60,5 @@ fi
 echo ">>>>> YOUR CERTIFICATE INFORMATION IS:"
 openssl x509 -in $hostcert_path -text
 echo "><><><><><><><><><><><><><><><><><><><"
+
+chown -R condor:condor /var/log/condor-ce /var/lib/condor-ce/spool
