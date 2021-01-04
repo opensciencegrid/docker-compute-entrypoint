@@ -2,6 +2,8 @@
 
 . /etc/osg/image-config.d/ce-common-startup
 
+set -x
+
 users=$(get_mapped_users)
 for user in $users; do
     echo "Creating local user ($user)..."
