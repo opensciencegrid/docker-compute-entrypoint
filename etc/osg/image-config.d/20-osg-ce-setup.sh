@@ -2,7 +2,7 @@
 
 . /etc/osg/image-config.d/ce-common-startup
 
-set -x
+set -e
 
 users=$(get_mapped_users)
 for user in $users; do
