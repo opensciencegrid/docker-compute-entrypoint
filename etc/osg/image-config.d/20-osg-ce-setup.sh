@@ -2,7 +2,7 @@
 
 . /etc/osg/image-config.d/ce-common-startup
 
-set -e
+set -xe
 
 users=$(get_mapped_users)
 for user in $users; do
@@ -64,3 +64,5 @@ openssl x509 -in $hostcert_path -text
 echo "><><><><><><><><><><><><><><><><><><><"
 
 chown -R condor:condor /var/log/condor-ce /var/lib/condor-ce/spool
+
+set +xe
