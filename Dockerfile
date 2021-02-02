@@ -13,6 +13,8 @@ RUN groupadd -g 64 -r condor && \
 RUN yum install -y --enablerepo=osg-testing \
                    --enablerepo=osg-upcoming-testing \
                    osg-ce-bosco \
+                   # FIXME: avoid htcondor-ce-collector conflict
+                   htcondor-ce \
                    htcondor-ce-view \
                    git \
                    openssh-clients \
