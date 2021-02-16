@@ -36,7 +36,7 @@ jobs:
         REPO: ${{ matrix.repo }}
         TIMESTAMP: ${{ needs.make-date-tag.outputs.dtag }}
       run: |
-        docker_repo=opensciencegrid/osgvo-docker-pilot
+        docker_repo=opensciencegrid/compute-entrypoint
         tag_list=$docker_repo:$REPO,$docker_repo:$REPO-$TIMESTAMP
         echo "::set-output name=taglist::$tag_list"
 
