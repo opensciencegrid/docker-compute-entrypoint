@@ -14,7 +14,7 @@ RUN groupadd -g 64 -r condor && \
 
 RUN  if [[ $BASE_YUM_REPO = release ]]; then \
        yumrepo=osg-upcoming; else \
-       yumrepo=osg-upcoming-$BASE_YUM_REPO; fi \
+       yumrepo=osg-upcoming-$BASE_YUM_REPO; fi && \
      yum install -y --enablerepo=$yumrepo \
                    osg-ce-bosco \
                    # FIXME: avoid htcondor-ce-collector conflict
