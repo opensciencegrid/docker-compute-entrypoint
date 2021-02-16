@@ -1,17 +1,21 @@
 # Specify the opensciencegrid/software-base image tag
-ARG SW_BASE_TAG=fresh
+ARG BASE_YUM_REPO=release
 
-FROM opensciencegrid/software-base:$SW_BASE_TAG
+FROM opensciencegrid/software-base:$BASE_YUM_REPO
 
 LABEL maintainer "OSG Software <help@opensciencegrid.org>"
+
+ARG BASE_YUM_REPO=release
 
 # Ensure that the 'condor' UID/GID matches across containers
 RUN groupadd -g 64 -r condor && \
     useradd -r -g condor -d /var/lib/condor -s /sbin/nologin \
       -u 64 -c "Owner of HTCondor Daemons" condor
 
-RUN yum install -y --enablerepo=osg-testing \
-                   --enablerepo=osg-upcoming-testing \
+RUN  if [[ $BASE_YUM_REPO = release ]]; then \
+       yumrepo=osg-upcoming; else \
+       yumrepo=osg-upcoming-$BASE_YUM_REPO; fi \
+     yum install -y --enablerepo=$yumrepo \
                    osg-ce-bosco \
                    # FIXME: avoid htcondor-ce-collector conflict
                    htcondor-ce \
