@@ -41,7 +41,7 @@ COPY base/usr/local/bin/* /usr/local/bin/
 COPY base/etc/supervisord.d/* /etc/supervisord.d/
 
 # do the bad thing of overwriting the existing cron job for fetch-crl
-ADD base/etc/cron.d/fetch-crl /etc/cron.d/fetch-crl
+COPY base/etc/cron.d/fetch-crl /etc/cron.d/fetch-crl
 RUN chmod 644 /etc/cron.d/fetch-crl
 
 # HACK: override condor_ce_jobmetrics from SOFTWARE-4183 until it is released in
@@ -89,7 +89,7 @@ COPY hosted-ce/30-remote-site-setup.sh /etc/osg/image-config.d/
 
 # HACK: override condor_ce_jobmetrics from SOFTWARE-4183 until it is released in
 # HTCondor-CE.
-ADD hosted-ce/overrides/condor_ce_jobmetrics /usr/share/condor-ce/condor_ce_jobmetrics
+COPY hosted-ce/overrides/condor_ce_jobmetrics /usr/share/condor-ce/condor_ce_jobmetrics
 
 # Use "ssh -q" in bosco_cluster until the chang has been upstreamed to condor
 COPY hosted-ce/overrides/ssh_q.patch /tmp
