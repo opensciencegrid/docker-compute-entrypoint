@@ -32,6 +32,7 @@ jobs:
       uses: actions/checkout@v2
 
     - id: generate-tag-list
+      needs: [make-date-tag]
       env:
         REPO: ${{ matrix.repo }}
         TIMESTAMP: ${{ needs.make-date-tag.outputs.dtag }}
