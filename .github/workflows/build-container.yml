@@ -1,4 +1,4 @@
-name: dispatched build-docker-image
+name: Build container images
 
 on:
   push:
@@ -19,9 +19,8 @@ jobs:
       id: mkdatetag
       run: echo "::set-output name=dtag::$(date +%Y%m%d-%H%M)"
 
-  build:
+  base-image-build:
     runs-on: ubuntu-latest
-    needs: [make-date-tag]
     if: startsWith(github.repository, 'opensciencegrid/')
     strategy:
       fail-fast: False
@@ -41,9 +40,48 @@ jobs:
     - id: generate-tag-list
       env:
         REPO: ${{ matrix.repo }}
-        TIMESTAMP: ${{ needs.make-date-tag.outputs.dtag }}
       run: |
         docker_repo=${GITHUB_REPOSITORY/opensciencegrid\/docker-/opensciencegrid/}
+        echo "::set-output name=taglist::$docker_repo:$REPO"
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+
+    - name: Build and push Docker images
+      uses: docker/build-push-action@v2.2.0
+      with:
+        build-args: BASE_YUM_REPO=${{ matrix.repo }}
+        tags: "${{ steps.generate-tag-list.outputs.taglist }}"
+        context: base
+        cache-to: type=local,dest=/tmp/.buildx-cache
+
+  child-image-builds:
+    runs-on: ubuntu-latest
+    needs: [make-date-tag, base-image-build]
+    if: startsWith(github.repository, 'opensciencegrid/')
+    strategy:
+      fail-fast: False
+      matrix:
+        repo: ['development', 'testing', 'release']
+        image: ['hosted-ce', 'osg-ce-condor']
+    steps:
+
+    - name: checkout compute-entrypoint
+      uses: actions/checkout@v2
+
+    - name: Load cached base image
+      uses: actions/cache@v2
+      with:
+        path: /tmp/.buildx-cache
+        key: base-${{ matrix.repo }}-buildx-${{ github.sha }}
+
+    - id: generate-tag-list
+      env:
+        REPO: ${{ matrix.repo }}
+        IMAGE: ${{ matrix.image }}
+        TIMESTAMP: ${{ needs.make-date-tag.outputs.dtag }}
+      run: |
+        docker_repo=opensciencegrid/$IMAGE
         tag_list=$docker_repo:$REPO,$docker_repo:$REPO-$TIMESTAMP
         echo "::set-output name=taglist::$tag_list"
 
@@ -59,23 +97,8 @@ jobs:
     - name: Build and push Docker images
       uses: docker/build-push-action@v2.2.0
       with:
+        push: True
         build-args: BASE_YUM_REPO=${{ matrix.repo }}
         tags: "${{ steps.generate-tag-list.outputs.taglist }}"
-        cache-to: type=local,dest=/tmp/.buildx-cache
-
-  dispatch:
-    runs-on: ubuntu-latest
-    if: startsWith(github.repository, 'opensciencegrid/')
-    needs: build
-    strategy:
-      matrix:
-        dispatch-repo:
-        - docker-osg-ce-condor
-    steps:
-
-    - name: dispatch build ${{ matrix.dispatch-repo }}
-      uses: peter-evans/repository-dispatch@v1
-      with:
-        token: ${{ secrets.REPO_ACCESS_TOKEN }}
-        repository: opensciencegrid/${{ matrix.dispatch-repo }}
-        event-type: dispatch-build
+        context: ${{ matrix.image }}
+        cache-from: type=local,dest=/tmp/.buildx-cache
