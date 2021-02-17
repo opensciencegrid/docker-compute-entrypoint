@@ -28,8 +28,7 @@ jobs:
         repo: ['development', 'testing', 'release']
     steps:
 
-    - name: checkout compute-entrypoint
-      uses: actions/checkout@v2
+    - uses: actions/checkout@v2
 
     - name: Cache base image
       uses: actions/cache@v2
@@ -37,7 +36,8 @@ jobs:
         path: /tmp/.buildx-cache
         key: base-${{ matrix.repo }}-buildx-${{ github.sha }}
 
-    - id: generate-tag-list
+    - name: Generate tag list
+      id: generate-tag-list
       env:
         REPO: ${{ matrix.repo }}
       run: |
@@ -66,8 +66,7 @@ jobs:
         image: ['hosted-ce', 'osg-ce-condor']
     steps:
 
-    - name: checkout compute-entrypoint
-      uses: actions/checkout@v2
+    - uses: actions/checkout@v2
 
     - name: Load cached base image
       uses: actions/cache@v2
@@ -75,7 +74,8 @@ jobs:
         path: /tmp/.buildx-cache
         key: base-${{ matrix.repo }}-buildx-${{ github.sha }}
 
-    - id: generate-tag-list
+    - name: Generate tag list
+      id: generate-tag-list
       env:
         REPO: ${{ matrix.repo }}
         IMAGE: ${{ matrix.image }}
