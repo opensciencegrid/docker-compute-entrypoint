@@ -32,6 +32,12 @@ jobs:
     - name: checkout compute-entrypoint
       uses: actions/checkout@v2
 
+    - name: Cache base image
+      uses: actions/cache@v2
+      with:
+        path: /tmp/.buildx-cache
+        key: base-${{ matrix.repo }}-buildx-${{ github.sha }}
+
     - id: generate-tag-list
       env:
         REPO: ${{ matrix.repo }}
@@ -55,6 +61,7 @@ jobs:
       with:
         build-args: BASE_YUM_REPO=${{ matrix.repo }}
         tags: "${{ steps.generate-tag-list.outputs.taglist }}"
+        cache-to: type=local,dest=/tmp/.buildx-cache
 
   dispatch:
     runs-on: ubuntu-latest
