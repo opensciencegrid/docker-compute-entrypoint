@@ -1,9 +1,9 @@
-ARGS BASE_YUM_REPO=release
+ARG BASE_YUM_REPO=release
 
 FROM opensciencegrid/compute-entrypoint:$BASE_YUM_REPO
 LABEL maintainer "OSG Software <help@opensciencegrid.org>"
 
-ARGS BASE_YUM_REPO=release
+ARG BASE_YUM_REPO=release
 
 RUN if [[ $BASE_YUM_REPO = release ]]; then \
        yumrepo=osg-upcoming; else \
