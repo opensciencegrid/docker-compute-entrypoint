@@ -1,0 +1,20 @@
+diff --git a/src/condor_contrib/bosco/bosco_cluster b/src/condor_contrib/bosco/bosco_cluster
+index ebcb582ab4..1425441d7c 100755
+--- /usr/bin/bosco_cluster
++++ /usr/bin/bosco_cluster
+@@ -837,15 +837,6 @@ if [ ! -e $bosco_key ]; then
+     fi
+ fi
+ 
+-
+-# Transfer the public key to the remote host
+-echo "Enter the password to copy the ssh keys to $remote_host:"
+-cat ${bosco_key}.pub | ssh $remote_host "umask 077; test -d ~/.ssh || mkdir ~/.ssh ; cat >> ~/.ssh/authorized_keys"
+-if [ $? -ne 0 ]; then
+-    echo "Error copying BOSCO key.  Please make sure you password is correct."
+-    exit 1
+-fi
+-
+ start_ssh
+ 
+ # Quickly test the ssh

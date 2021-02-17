@@ -1,0 +1,13 @@
+*** /usr/bin/bosco_cluster	2019-11-08 14:08:14.613833413 -0600
+--- /usr/bin/bosco_cluster	2020-03-16 15:59:09.660871401 -0500
+***************
+*** 5,10 ****
+--- 5,11 ----
+  # as function exit code (by return) and this is modulo 256
+  # see cluster_list_iterator, list
+ 
++ alias ssh='ssh -q'
+ 
+  # Bosco key location
+  bosco_key=$HOME/.ssh/bosco_key.rsa
+

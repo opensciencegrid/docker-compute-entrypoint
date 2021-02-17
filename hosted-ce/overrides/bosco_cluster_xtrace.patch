@@ -1,0 +1,12 @@
+diff --git a/src/condor_contrib/bosco/bosco_cluster b/src/condor_contrib/bosco/bosco_cluster
+index ebcb582ab4..7afd1c7c5e 100755
+--- /usr/bin/bosco_cluster
++++ /usr/bin/bosco_cluster
+@@ -778,6 +778,7 @@ while true; do
+     esac
+ done
+ 
++[[ $debug -eq 1 ]] && set -x
+ 
+ ################################################################
+ # The rest of the file covers the 'add' cluster functionality.
