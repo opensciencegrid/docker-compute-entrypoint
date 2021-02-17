@@ -37,7 +37,7 @@ jobs:
         REPO: ${{ matrix.repo }}
         TIMESTAMP: ${{ needs.make-date-tag.outputs.dtag }}
       run: |
-        docker_repo=opensciencegrid/compute-entrypoint
+        docker_repo=${GITHUB_REPOSITORY/opensciencegrid\/docker-/opensciencegrid/}
         tag_list=$docker_repo:$REPO,$docker_repo:$REPO-$TIMESTAMP
         echo "::set-output name=taglist::$tag_list"
 
