@@ -5,7 +5,7 @@
 # Specify the opensciencegrid/software-base image tag
 ARG BASE_YUM_REPO=release
 
-FROM opensciencegrid/software-base:$BASE_YUM_REPO AS base
+FROM opensciencegrid/software-base:3.5-el7-$BASE_YUM_REPO AS base
 LABEL maintainer "OSG Software <help@opensciencegrid.org>"
 
 # previous arg has gone out of scope
