@@ -36,10 +36,9 @@ function fetch_remote_os_info {
 }
 
 setup_ssh_config () {
-  echo "Adding user ${ruser}"
+  echo "Setting up SSH for user ${ruser}"
   ssh_dir="/home/${ruser}/.ssh"
   # setup user and SSH dir
-  adduser --base-dir /home/ "${ruser}"
   mkdir -p $ssh_dir
   chown "${ruser}": $ssh_dir
   chmod 700 $ssh_dir
