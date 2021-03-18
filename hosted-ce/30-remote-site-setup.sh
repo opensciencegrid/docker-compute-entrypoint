@@ -161,7 +161,9 @@ fi
 [[ $REMOTE_BOSCO_DIR ]] && bosco_cluster_opts+=(-b "$REMOTE_BOSCO_DIR") \
         || REMOTE_BOSCO_DIR=bosco
 
-echo "Using Bosco tarball: $(bosco_findplatform --url)"
+# Add the ability for admins to override the default Bosco tarball URL (SOFTWARE-4537)
+[[ $BOSCO_TARBALL_URL ]] && bosco_cluster_opts+=(--url "$BOSCO_TARBALL_URL")
+
 for ruser in $users; do
     setup_ssh_config
 done
