@@ -35,7 +35,7 @@ jobs:
       uses: actions/cache@v2
       with:
         path: /tmp/.buildx-cache
-        key: base-${{ matrix.repo }}-buildx-${{ github.sha }}
+        key: base-${{ matrix.repo }}-buildx-${{ github.sha }}-${{ github.run_id }}
         # allow cache hits from previous runs of the current branch,
         # parent branch, then upstream branches, in that order
         restore-keys: |
@@ -70,7 +70,7 @@ jobs:
       uses: actions/cache@v2
       with:
         path: /tmp/.buildx-cache
-        key: base-${{ matrix.repo }}-buildx-${{ github.sha }}
+        key: base-${{ matrix.repo }}-buildx-${{ github.sha }}-${{ github.run_id }}
 
     - name: Generate tag list
       id: generate-tag-list
