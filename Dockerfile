@@ -107,7 +107,7 @@ RUN patch -d / -p0 < /tmp/skip_key_copy.patch
 # Fix Ubuntu20 OS detection (SOFTWARE-4463)
 # Can be dropped when HTCONDOR-242 is involved
 COPY hosted-ce/overrides/HTCONDOR-242.remote-os-detection.patch /tmp
-RUN [[ $BASE_YUM_REPO == 'development' ]] || patch -d / -p0 < /tmp/HTCONDOR-242.remote-os-detection.patch
+RUN [[ $BASE_YUM_REPO != 'release' ]] || patch -d / -p0 < /tmp/HTCONDOR-242.remote-os-detection.patch
 
 # Set up Bosco override dir from Git repo (SOFTWARE-3903)
 # Expects a Git repo with the following directory structure:
