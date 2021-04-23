@@ -64,7 +64,7 @@ openssl x509 -in $hostcert_path -text
 echo "><><><><><><><><><><><><><><><><><><><"
 
 # Ensure that PVC dirs and subdirs exist and have the proper
-# permissions (SOFTWARE-4423)
+# ownership (SOFTWARE-4423)
 mkdir -p \
       /var/log/condor-ce/ \
       /var/lib/condor-ce/execute \
