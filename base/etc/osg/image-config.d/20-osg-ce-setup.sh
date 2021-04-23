@@ -63,6 +63,14 @@ echo ">>>>> YOUR CERTIFICATE INFORMATION IS:"
 openssl x509 -in $hostcert_path -text
 echo "><><><><><><><><><><><><><><><><><><><"
 
-chown -R condor:condor /var/log/condor-ce /var/lib/condor-ce/spool
+# Ensure that PVC dirs and subdirs exist and have the proper
+# permissions (SOFTWARE-4423)
+mkdir -p \
+      /var/log/condor-ce/ \
+      /var/lib/condor-ce/execute \
+      /var/lib/condor-ce/spool/ceview/{metrics,vos}
+chown -R condor:condor \
+      /var/log/condor-ce \
+      /var/lib/condor-ce/
 
 set +xe
