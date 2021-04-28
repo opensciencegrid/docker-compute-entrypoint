@@ -109,6 +109,12 @@ RUN patch -d / -p0 < /tmp/skip_key_copy.patch
 COPY hosted-ce/overrides/HTCONDOR-242.remote-os-detection.patch /tmp
 RUN [[ $BASE_YUM_REPO != 'release' ]] || patch -d / -p0 < /tmp/HTCONDOR-242.remote-os-detection.patch
 
+# Allow the Gridmanager to specify 'batch_gahp' for its remote command
+# Required for HTCondor 9.0.0 on the CE and Bosco 1.3 usage
+# Can be dropped when HTCONDOR-451 has been fixed and released in the OSG
+COPY hosted-ce/overrides/HTCONDOR-451.allow-batch_gahp.patch /tmp
+RUN [[ $BASE_YUM_REPO == 'release' ]] || patch -d / -p0 < /tmp/HTCONDOR-451.allow-batch_gahp.patch
+
 # Set up Bosco override dir from Git repo (SOFTWARE-3903)
 # Expects a Git repo with the following directory structure:
 #     RESOURCE_NAME_1/
