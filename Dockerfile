@@ -55,6 +55,7 @@ COPY base/overrides/condor_ce_jobmetrics /usr/share/condor-ce/condor_ce_jobmetri
 FROM base AS osg-ce-condor
 ARG BASE_YUM_REPO=release
 LABEL maintainer "OSG Software <help@opensciencegrid.org>"
+LABEL name "osg-ce-condor"
 
 RUN if [[ $BASE_YUM_REPO = release ]]; then \
        yumrepo=osg-upcoming; else \
@@ -75,6 +76,7 @@ COPY osg-ce-condor/etc/supervisord.d/* /etc/supervisord.d/
 
 FROM base AS hosted-ce
 LABEL maintainer "OSG Software <help@opensciencegrid.org>"
+LABEL name "hosted-ce"
 
 ARG BASE_YUM_REPO=release
 
