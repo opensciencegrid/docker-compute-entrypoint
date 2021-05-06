@@ -1,0 +1,33 @@
+diff --git a/src/condor_gridmanager/remote_gahp b/src/condor_gridmanager/remote_gahp
+index 8a253bdab5..5b49a8d507 100755
+--- /usr/sbin/remote_gahp
++++ /usr/sbin/remote_gahp
+@@ -78,7 +78,7 @@
+             echo -e "$USAGE"
+             exit 1;;
+         -- ) shift
+-            if [ "$REMOTE_CMD" = "" ] ; then
++            if [ "$REMOTE_CMD" = "" -o "$1" = "condor_ft-gahp" ] ; then
+                 REMOTE_CMD="$1"
+                 shift
+             fi
+@@ -92,7 +92,7 @@
+                     REMOTE_PORT="${BASH_REMATCH[5]:-$REMOTE_PORT}"
+                 fi
+                 shift
+-            elif [ "$REMOTE_CMD" = "" ] ; then
++            elif [ "$REMOTE_CMD" = "" -o "$1" = "condor_ft-gahp" ] ; then
+                 REMOTE_CMD="$1"
+                 shift
+             else
+@@ -150,8 +150,8 @@ SSH_ARGS=(-p $REMOTE_PORT)
+ [[ $SSH_BATCHMODE == "yes" ]] && SSH_ARGS+=(-o "BatchMode yes")
+ 
+ #echo "** Follows output of: ssh ${SSH_ARGS[@]} $REMOTE_USER@$REMOTE_HOSTNAME /bin/bash -c \"'GLITE_LOCATION=$REMOTE_GLITE $REMOTE_GLITE/bin/blahpd $*'\""
+-if [ "${REMOTE_CMD}" = "blahpd" ] ; then
+-    ssh "${SSH_ARGS[@]}" $REMOTE_USER@$REMOTE_HOSTNAME /bin/bash -l -c "'GLITE_LOCATION=$REMOTE_GLITE $REMOTE_GLITE/bin/blahpd $*'"
++if [[ $REMOTE_CMD == "blahpd" || $REMOTE_CMD == "batch_gahp" ]] ; then
++    ssh "${SSH_ARGS[@]}" $REMOTE_USER@$REMOTE_HOSTNAME /bin/bash -l -c "'GLITE_LOCATION=$REMOTE_GLITE $REMOTE_GLITE/bin/$REMOTE_CMD $*'"
+     SSH_STATUS=$?
+ elif [ "${REMOTE_CMD}" = "condor_ft-gahp" ] ; then
+     # We need to set up a tunnel from the remote machine for the file

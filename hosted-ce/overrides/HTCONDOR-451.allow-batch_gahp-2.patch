@@ -1,0 +1,39 @@
+HTCONDOR-451.allow-batch_gahp-2
+
+Jaime's fix on top of HTCONDOR-451.allow-batch_gahp.patch
+
+---
+ src/condor_gridmanager/remote_gahp | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/condor_gridmanager/remote_gahp b/src/condor_gridmanager/remote_gahp
+index db30b8262b..20da8d86dc 100755
+--- /usr/sbin/remote_gahp
++++ /usr/sbin/remote_gahp
+@@ -78,21 +78,21 @@ while [ $# != 0 ] ; do
+             echo -e "$USAGE"
+             exit 1;;
+         -- ) shift
+-            if [ "$REMOTE_CMD" = "" ] ; then
++            if [ "$REMOTE_CMD" = "" -o "$1" = "condor_ft-gahp" ] ; then
+                 REMOTE_CMD="$1"
+                 shift
+             fi
+             break;;
+         -* ) break;;
+         * )
+             if [ "$REMOTE_HOSTNAME" = "" ] ; then
+                 if  [[ $1 =~ ^(([A-Za-z_][A-Za-z0-9_-]*)@)?([A-Za-z0-9\.-]+)(:([0-9]*))?$ ]]; then
+                     REMOTE_USER="${BASH_REMATCH[2]:-$REMOTE_USER}"
+                     REMOTE_HOSTNAME="${BASH_REMATCH[3]:-$REMOTE_HOSTNAME}"
+                     REMOTE_PORT="${BASH_REMATCH[5]:-$REMOTE_PORT}"
+                 fi
+                 shift
+-            elif [ "$REMOTE_CMD" = "" ] ; then
++            elif [ "$REMOTE_CMD" = "" -o "$1" = "condor_ft-gahp" ] ; then
+                 REMOTE_CMD="$1"
+                 shift
+             else
+-- 
+2.30.2
+
