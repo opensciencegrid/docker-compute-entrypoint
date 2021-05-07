@@ -33,15 +33,12 @@ function debug_file_contents {
 function fetch_remote_os_info {
     ruser=$1
     rhost=$2
-    ssh -q -i "$(get_bosco_key "$ruser" "$rhost")" "$ruser@$rhost" "cat /etc/os-release"
+    ssh -q -i "$(get_bosco_key "$ruser")" "$ruser@$rhost" "cat /etc/os-release"
 }
 
 function get_bosco_key {
     ruser=$1
-    rhost=$2
-    if [[ -f $BOSCOKEYS_DIR/${ruser}@${rhost}.key ]]; then
-        echo "$BOSCOKEYS_DIR/${ruser}@${rhost}.key"
-    elif [[ -f $BOSCOKEYS_DIR/${ruser}.key ]]; then
+    if [[ -f $BOSCOKEYS_DIR/${ruser}.key ]]; then
         echo "$BOSCOKEYS_DIR/${ruser}.key"
     else
         echo "$DEFAULT_BOSCO_KEY"
@@ -58,7 +55,7 @@ setup_ssh_config () {
 
   # copy Bosco key
   ssh_key=$ssh_dir/bosco_key.rsa
-  cp "$(get_bosco_key "$ruser" "$remote_fqdn")" $ssh_key
+  cp "$(get_bosco_key "$ruser")" $ssh_key
   chmod 600 $ssh_key
   chown "${ruser}": $ssh_key
 
@@ -90,7 +87,7 @@ EOF
 setup_endpoints_ini () {
     echo "Setting up endpoint.ini entry for ${ruser}@$remote_fqdn..."
     remote_os_major_ver=$1
-    ssh_key=$(get_bosco_key "$ruser" "$remote_fqdn")
+    ssh_key=$(get_bosco_key "$ruser")
     # The WN client updater uses "remote_dir" for WN client
     # configuration and remote copy. We need the absolute path
     # specifically for fetch-crl
@@ -126,12 +123,12 @@ REMOTE_HOST_KEY=`ssh-keyscan -p "$remote_port" "$remote_fqdn"`
 root_ssh_dir=/root/.ssh/
 mkdir -p $root_ssh_dir
 chmod 700 $root_ssh_dir
-ln -s "$(get_bosco_key "root" "$remote_fqdn")" $root_ssh_dir/bosco_key.rsa
+ln -s "$(get_bosco_key "root")" $root_ssh_dir/bosco_key.rsa
 
 cat <<EOF > /etc/ssh/ssh_config
 Host $remote_fqdn
   Port $remote_port
-  IdentityFile "$(get_bosco_key "root" "$remote_fqdn")"
+  IdentityFile "$(get_bosco_key "root")"
   ControlMaster auto
   ControlPath /tmp/cm-%i-%r@%h:%p
   ControlPersist  15m
