@@ -28,9 +28,9 @@ def main():
     probe_config = probe_et.getroot()
 
     probe_config.attrib['Lockfile'] = '/var/lock/condor-ce/gratia.lock'
-    probe_config.attrib['WorkingFolder'] = '/var/lib/condor-ce/'
+    probe_config.attrib['WorkingFolder'] = '/var/lib/condor-ce/gratia/tmp/'
     probe_config.attrib['DataFolder'] = '/var/lib/condor-ce/gratia/data/'
-    probe_config.attrib['CondorCEHistoryFolder'] = '/var/lib/condor-ce/gratia/data/'
+    probe_config.attrib['CondorCEHistoryFolder'] = '/var/lib/condor-ce/history/'
     probe_config.attrib['LogFolder'] = '/var/log/condor-ce/'
 
     with open(config_path, 'w') as config_file:
