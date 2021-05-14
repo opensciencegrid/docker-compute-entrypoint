@@ -127,3 +127,9 @@ RUN [[ $BASE_YUM_REPO != 'testing' ]] || patch -d / -p0 < /tmp/HTCONDOR-451.allo
 #         ...
 #     ...
 COPY hosted-ce/bosco-override-setup.sh /usr/local/bin
+
+
+# for testing SciTokens support (SOFTWARE-4615)
+RUN yum install -y https://koji.opensciencegrid.org/kojifiles/work/tasks/8436/338436/gratia-probe-common-1.23.3-1.osg35.el8.x86_64.rpm \
+                   https://koji.opensciencegrid.org/kojifiles/work/tasks/8436/338436/gratia-probe-htcondor-ce-1.23.3-1.osg35.el8.x86_64.rpm
+
