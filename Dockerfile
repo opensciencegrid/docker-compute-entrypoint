@@ -106,11 +106,6 @@ RUN patch -d / -p0 < /tmp/bosco_cluster_xtrace.patch
 COPY hosted-ce/overrides/skip_key_copy.patch /tmp
 RUN patch -d / -p0 < /tmp/skip_key_copy.patch
 
-# Fix Ubuntu20 OS detection (SOFTWARE-4463)
-# Can be dropped when HTCONDOR-242 is involved
-COPY hosted-ce/overrides/HTCONDOR-242.remote-os-detection.patch /tmp
-RUN [[ $BASE_YUM_REPO != 'release' ]] || patch -d / -p0 < /tmp/HTCONDOR-242.remote-os-detection.patch
-
 # Allow the Gridmanager to specify 'batch_gahp' for its remote command
 # Required for HTCondor 9.0.0 on the CE and Bosco 1.3 usage
 # Can be dropped when HTCONDOR-451 has been fixed and released in the OSG
