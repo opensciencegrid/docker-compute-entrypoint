@@ -48,6 +48,10 @@ RUN chmod 644 /etc/cron.d/fetch-crl
 # HTCondor-CE.
 COPY base/overrides/condor_ce_jobmetrics /usr/share/condor-ce/condor_ce_jobmetrics
 
+# Workaround BatchRuntime expresion bug (HTCONDOR-506)
+COPY base/overrides/HTCONDOR-506.evalset-batchruntime.patch /tmp
+RUN patch -d / -p0 < /tmp/HTCONDOR-506.evalset-batchruntime.patch
+
 #################
 # osg-ce-condor #
 #################
