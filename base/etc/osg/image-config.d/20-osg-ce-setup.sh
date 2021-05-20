@@ -65,12 +65,15 @@ echo "><><><><><><><><><><><><><><><><><><><"
 
 # Ensure that PVC dirs and subdirs exist and have the proper
 # ownership (SOFTWARE-4423)
-mkdir -p \
-      /var/log/condor-ce/ \
-      /var/lib/condor-ce/execute \
-      /var/lib/condor-ce/spool/ceview/{metrics,vos}
-chown -R condor:condor \
-      /var/log/condor-ce \
-      /var/lib/condor-ce/
+pvc_dirs=(/var/log/condor-ce/
+          /var/lib/condor-ce/execute
+          /var/lib/condor-ce/spool/ceview/metrics
+          /var/lib/condor-ce/spool/ceview/vos)
+mkdir -p ${pvc_dirs[*]}
+
+pvc_dirs+=(/var/lib/condor-ce
+           /var/lib/condor-ce/spool
+           /var/lib/condor-ce/spool/ceview)
+chown condor:condor ${pvc_dirs[*]}
 
 set +xe
