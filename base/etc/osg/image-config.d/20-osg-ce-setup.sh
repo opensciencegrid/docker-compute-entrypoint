@@ -42,21 +42,29 @@ fi
 hostcert_path=/etc/grid-security/hostcert.pem
 hostkey_path=/etc/grid-security/hostkey.pem
 hostcsr_path=/etc/grid-security/host.req
+orig_hostcert_path=/etc/grid-security-orig.d/tls.crt
+orig_hostkey_path=/etc/grid-security-orig.d/tls.key
 
 certbot_opts="--noninteractive --agree-tos --standalone --email $CE_CONTACT -d $CE_HOSTNAME"
 
 [[ $LE_STAGING == "true" ]] && certbot_opts="$certbot_opts --dry-run"
 
 if [ ! -f $hostcert_path ] || [ ! -f $hostkey_path ]; then
-    echo "Establishing Let's Encrypt certificate.."
-    if [ -f $hostkey_path ]; then
-        openssl req -new -nodes -out $hostcsr_path -key $hostkey_path -subj "/CN=$CE_HOSTNAME"
-        certbot_opts="$certbot_opts --csr $hostcsr_path --cert-path $hostcert_path"
+    if [[ -f $orig_hostcert_path && -f $orig_hostkey_path ]]; then
+        echo "Using host cert/key mounted in /etc/grid-security-orig.d/"
+        ln -s $orig_hostcert_path $hostcert_path
+        ln -s $orig_hostkey_path $hostkey_path
+    else
+        echo "Establishing Let's Encrypt certificate.."
+        if [ -f $hostkey_path ]; then
+            openssl req -new -nodes -out $hostcsr_path -key $hostkey_path -subj "/CN=$CE_HOSTNAME"
+            certbot_opts="$certbot_opts --csr $hostcsr_path --cert-path $hostcert_path"
+        fi
+        # this needs to be automated for renewal
+        certbot certonly $certbot_opts
+        [ -f $hostcert_path ] || ln -s /etc/letsencrypt/live/$CE_HOSTNAME/cert.pem $hostcert_path
+        [ -f $hostkey_path ] ||  ln -s /etc/letsencrypt/live/$CE_HOSTNAME/privkey.pem $hostkey_path
     fi
-    # this needs to be automated for renewal
-    certbot certonly $certbot_opts
-    [ -f $hostcert_path ] || ln -s /etc/letsencrypt/live/$CE_HOSTNAME/cert.pem $hostcert_path
-    [ -f $hostkey_path ] ||  ln -s /etc/letsencrypt/live/$CE_HOSTNAME/privkey.pem $hostkey_path
 fi
 
 echo ">>>>> YOUR CERTIFICATE INFORMATION IS:"
