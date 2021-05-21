@@ -118,12 +118,20 @@ fi
 REMOTE_HOST_KEY=`ssh-keyscan -p "$remote_port" "$remote_fqdn"`
 [[ -n $REMOTE_HOST_KEY ]] || errexit "Failed to determine host key for $remote_fqdn:$remote_port"
 
+
+users=$(cat /etc/grid-security/grid-mapfile /etc/grid-security/voms-mapfile | \
+            awk '/^"[^"]+" +[a-zA-Z0-9\-\._]+$/ {print $NF}' | \
+            sort -u)
+[[ -n $users ]] || errexit "Did not find any user mappings in the VOMS or Grid mapfiles"
+# Use the first user for things we only need once
+firstuser=$(printf "%s\n" $users | head -n1)
+
 # HACK: Symlink the Bosco key to the location expected by
 # bosco_cluster so it doesn't go and try to generate a new one
 root_ssh_dir=/root/.ssh/
 mkdir -p $root_ssh_dir
 chmod 700 $root_ssh_dir
-ln -s "$(get_bosco_key "root")" $root_ssh_dir/bosco_key.rsa
+install -o root -g root -m 0600 "$(get_bosco_key "firstuser")" $root_ssh_dir/bosco_key.rsa
 
 cat <<EOF > /etc/ssh/ssh_config
 Host $remote_fqdn
@@ -145,10 +153,6 @@ if [[ -n $BOSCO_GIT_ENDPOINT && -n $BOSCO_DIRECTORY ]]; then
 fi
 unset GIT_SSH_COMMAND
 
-users=$(cat /etc/grid-security/grid-mapfile /etc/grid-security/voms-mapfile | \
-            awk '/^"[^"]+" +[a-zA-Z0-9\-\._]+$/ {print $NF}' | \
-            sort -u)
-[[ -n $users ]] || errexit "Did not find any user mappings in the VOMS or Grid mapfiles"
 
 # Allow the condor user to run the WN client updater as the local users
 CONDOR_SUDO_FILE=/etc/sudoers.d/10-condor-ssh
@@ -185,7 +189,7 @@ done
 ###################
 
 # We have to pick a user for SSH, may as well be the first one
-remote_os_info=$(fetch_remote_os_info "$(printf "%s\n" $users | head -n1)" "$remote_fqdn")
+remote_os_info=$(fetch_remote_os_info "$firstuser" "$remote_fqdn")
 remote_os_ver=$(echo "$remote_os_info" | awk -F '=' '/^VERSION_ID/ {print $2}' | tr -d '"')
 
 # Skip WN client installation for non-RHEL-based remote clusters
