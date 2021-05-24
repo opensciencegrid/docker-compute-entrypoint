@@ -39,6 +39,13 @@ if [ "${DEVELOPER,,}" == 'true' ]; then
     osg-ca-generator --host --vo osgtest
 fi
 
+
+# For host certs, we want to support the following use cases:
+# 1. Support mounting of a cert/key pair to /etc/grid-security-orig.d/.
+#    Useful for Kubernetes setups so that secret updates can be
+#    propagated to the container without a restart
+# 2. Support direct mounts of /etc/grid-security/host{cert,key}.pem
+# 3. Requesting LE certs if no host cert/key pair is mounted using the above
 hostcert_path=/etc/grid-security/hostcert.pem
 hostkey_path=/etc/grid-security/hostkey.pem
 hostcsr_path=/etc/grid-security/host.req
