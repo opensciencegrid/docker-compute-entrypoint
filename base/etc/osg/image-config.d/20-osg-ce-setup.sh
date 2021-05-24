@@ -49,8 +49,8 @@ fi
 hostcert_path=/etc/grid-security/hostcert.pem
 hostkey_path=/etc/grid-security/hostkey.pem
 hostcsr_path=/etc/grid-security/host.req
-orig_hostcert_path=/etc/grid-security-orig.d/tls.crt
-orig_hostkey_path=/etc/grid-security-orig.d/tls.key
+orig_hostcert_path=/etc/grid-security-orig.d/hostcert.pem
+orig_hostkey_path=/etc/grid-security-orig.d/hostkey.pem
 
 certbot_opts="--noninteractive --agree-tos --standalone --email $CE_CONTACT -d $CE_HOSTNAME"
 
