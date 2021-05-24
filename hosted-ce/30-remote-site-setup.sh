@@ -119,6 +119,7 @@ REMOTE_HOST_KEY=`ssh-keyscan -p "$remote_port" "$remote_fqdn"`
 [[ -n $REMOTE_HOST_KEY ]] || errexit "Failed to determine host key for $remote_fqdn:$remote_port"
 
 
+# TODO: Read from the SciTokens mapfile too?
 users=$(cat /etc/grid-security/grid-mapfile /etc/grid-security/voms-mapfile | \
             awk '/^"[^"]+" +[a-zA-Z0-9\-\._]+$/ {print $NF}' | \
             sort -u)
