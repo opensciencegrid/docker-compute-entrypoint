@@ -39,24 +39,39 @@ if [ "${DEVELOPER,,}" == 'true' ]; then
     osg-ca-generator --host --vo osgtest
 fi
 
+
+# For host certs, we want to support the following use cases:
+# 1. Support mounting of a cert/key pair to /etc/grid-security-orig.d/.
+#    Useful for Kubernetes setups so that secret updates can be
+#    propagated to the container without a restart
+# 2. Support direct mounts of /etc/grid-security/host{cert,key}.pem
+# 3. Requesting LE certs if no host cert/key pair is mounted using the above
 hostcert_path=/etc/grid-security/hostcert.pem
 hostkey_path=/etc/grid-security/hostkey.pem
 hostcsr_path=/etc/grid-security/host.req
+orig_hostcert_path=/etc/grid-security-orig.d/hostcert.pem
+orig_hostkey_path=/etc/grid-security-orig.d/hostkey.pem
 
 certbot_opts="--noninteractive --agree-tos --standalone --email $CE_CONTACT -d $CE_HOSTNAME"
 
 [[ $LE_STAGING == "true" ]] && certbot_opts="$certbot_opts --dry-run"
 
 if [ ! -f $hostcert_path ] || [ ! -f $hostkey_path ]; then
-    echo "Establishing Let's Encrypt certificate.."
-    if [ -f $hostkey_path ]; then
-        openssl req -new -nodes -out $hostcsr_path -key $hostkey_path -subj "/CN=$CE_HOSTNAME"
-        certbot_opts="$certbot_opts --csr $hostcsr_path --cert-path $hostcert_path"
+    if [[ -f $orig_hostcert_path && -f $orig_hostkey_path ]]; then
+        echo "Using host cert/key mounted in /etc/grid-security-orig.d/"
+        ln -s $orig_hostcert_path $hostcert_path
+        ln -s $orig_hostkey_path $hostkey_path
+    else
+        echo "Establishing Let's Encrypt certificate.."
+        if [ -f $hostkey_path ]; then
+            openssl req -new -nodes -out $hostcsr_path -key $hostkey_path -subj "/CN=$CE_HOSTNAME"
+            certbot_opts="$certbot_opts --csr $hostcsr_path --cert-path $hostcert_path"
+        fi
+        # this needs to be automated for renewal
+        certbot certonly $certbot_opts
+        [ -f $hostcert_path ] || ln -s /etc/letsencrypt/live/$CE_HOSTNAME/cert.pem $hostcert_path
+        [ -f $hostkey_path ] ||  ln -s /etc/letsencrypt/live/$CE_HOSTNAME/privkey.pem $hostkey_path
     fi
-    # this needs to be automated for renewal
-    certbot certonly $certbot_opts
-    [ -f $hostcert_path ] || ln -s /etc/letsencrypt/live/$CE_HOSTNAME/cert.pem $hostcert_path
-    [ -f $hostkey_path ] ||  ln -s /etc/letsencrypt/live/$CE_HOSTNAME/privkey.pem $hostkey_path
 fi
 
 echo ">>>>> YOUR CERTIFICATE INFORMATION IS:"
