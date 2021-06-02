@@ -50,7 +50,7 @@ COPY base/overrides/condor_ce_jobmetrics /usr/share/condor-ce/condor_ce_jobmetri
 
 # Workaround BatchRuntime expresion bug (HTCONDOR-506)
 COPY base/overrides/HTCONDOR-506.evalset-batchruntime.patch /tmp
-RUN [[ $BASE_YUM_REPO == 'development' ]] || patch -d / -p0 < /tmp/HTCONDOR-506.evalset-batchruntime.patch
+RUN [[ $BASE_YUM_REPO != 'release' ]] || patch -d / -p0 < /tmp/HTCONDOR-506.evalset-batchruntime.patch
 
 #################
 # osg-ce-condor #
