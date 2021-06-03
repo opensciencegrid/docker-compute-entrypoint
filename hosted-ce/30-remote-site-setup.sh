@@ -1,5 +1,7 @@
 #!/bin/bash
 
+. /etc/osg/image-config.d/ce-common-startup
+
 set -x
 
 # save old -e status
@@ -119,25 +121,24 @@ REMOTE_HOST_KEY=`ssh-keyscan -p "$remote_port" "$remote_fqdn"`
 [[ -n $REMOTE_HOST_KEY ]] || errexit "Failed to determine host key for $remote_fqdn:$remote_port"
 
 
-# TODO: Read from the SciTokens mapfile too?
-users=$(cat /etc/grid-security/grid-mapfile /etc/grid-security/voms-mapfile | \
-            awk '/^"[^"]+" +[a-zA-Z0-9\-\._]+$/ {print $NF}' | \
-            sort -u)
-[[ -n $users ]] || errexit "Did not find any user mappings in the VOMS or Grid mapfiles"
+users=$(get_mapped_users)
+[[ -n $users ]] || errexit "Did not find any user mappings"
 # Use the first user for things we only need once
-firstuser=$(printf "%s\n" $users | head -n1)
+firstuser=$(printf "%s\n" "$users" | head -n1)
+id -u "$firstuser" &>/dev/null || errexit "Expected user $firstuser doesn't exist"
 
 # HACK: Symlink the Bosco key to the location expected by
 # bosco_cluster so it doesn't go and try to generate a new one
 root_ssh_dir=/root/.ssh/
 mkdir -p $root_ssh_dir
 chmod 700 $root_ssh_dir
-install -o root -g root -m 0600 "$(get_bosco_key "firstuser")" $root_ssh_dir/bosco_key.rsa
+install -o root -g root -m 0600 "$(get_bosco_key "$firstuser")" $root_ssh_dir/bosco_key.rsa
 
 cat <<EOF > /etc/ssh/ssh_config
 Host $remote_fqdn
+  User $firstuser
   Port $remote_port
-  IdentityFile "$(get_bosco_key "root")"
+  IdentityFile "$(get_bosco_key "$firstuser")"
   ControlMaster auto
   ControlPath /tmp/cm-%i-%r@%h:%p
   ControlPersist  15m
