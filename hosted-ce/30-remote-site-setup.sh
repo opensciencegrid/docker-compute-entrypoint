@@ -123,22 +123,26 @@ REMOTE_HOST_KEY=`ssh-keyscan -p "$remote_port" "$remote_fqdn"`
 
 users=$(get_mapped_users)
 [[ -n $users ]] || errexit "Did not find any user mappings"
+
 # Use the first user for things we only need once
 firstuser=$(printf "%s\n" "$users" | head -n1)
 id -u "$firstuser" &>/dev/null || errexit "Expected user $firstuser doesn't exist"
+
+firstuser_key=$(get_bosco_key "$firstuser")
+[[ -f $firstuser_key ]] || errexit "Failed to get SSH key for $firstuser"
 
 # HACK: Symlink the Bosco key to the location expected by
 # bosco_cluster so it doesn't go and try to generate a new one
 root_ssh_dir=/root/.ssh/
 mkdir -p $root_ssh_dir
 chmod 700 $root_ssh_dir
-install -o root -g root -m 0600 "$(get_bosco_key "$firstuser")" $root_ssh_dir/bosco_key.rsa
+install -o root -g root -m 0600 "$firstuser_key" $root_ssh_dir/bosco_key.rsa
 
 cat <<EOF > /etc/ssh/ssh_config
 Host $remote_fqdn
   User $firstuser
   Port $remote_port
-  IdentityFile "$(get_bosco_key "$firstuser")"
+  IdentityFile $firstuser_key
   ControlMaster auto
   ControlPath /tmp/cm-%i-%r@%h:%p
   ControlPersist  15m
