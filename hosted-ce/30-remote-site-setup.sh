@@ -207,7 +207,7 @@ for ruser in $users; do
     echo "Installing remote Bosco installation for ${ruser}@$remote_fqdn"
     [[ $SKIP_WN_INSTALL == 'no' ]] && setup_endpoints_ini "${remote_os_ver%%.*}"
     # $REMOTE_BATCH needs to be specified in the environment
-    bosco_cluster "${bosco_cluster_opts[@]}" -a "${ruser}@$remote_fqdn" "$REMOTE_BATCH"
+    sudo -u $ruser bosco_cluster "${bosco_cluster_opts[@]}" -a "${ruser}@$remote_fqdn" "$REMOTE_BATCH"
 
     echo "Installing environment files for $ruser@$remote_fqdn..."
     # Copy over environment files to allow for dynamic WN variables (SOFTWARE-4117)
