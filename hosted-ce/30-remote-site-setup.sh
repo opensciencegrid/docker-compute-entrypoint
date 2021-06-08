@@ -131,7 +131,7 @@ id -u "$firstuser" &>/dev/null || errexit "Expected user $firstuser doesn't exis
 firstuser_key=$(get_bosco_key "$firstuser")
 [[ -f $firstuser_key ]] || errexit "Failed to get SSH key for $firstuser"
 
-# HACK: Symlink the Bosco key to the location expected by
+# HACK: Copy the Bosco key to the location expected by
 # bosco_cluster so it doesn't go and try to generate a new one
 root_ssh_dir=/root/.ssh/
 mkdir -p $root_ssh_dir
@@ -140,9 +140,7 @@ install -o root -g root -m 0600 "$firstuser_key" $root_ssh_dir/bosco_key.rsa
 
 cat <<EOF > /etc/ssh/ssh_config
 Host $remote_fqdn
-  User $firstuser
   Port $remote_port
-  IdentityFile $firstuser_key
   ControlMaster auto
   ControlPath /tmp/cm-%i-%r@%h:%p
   ControlPersist  15m
