@@ -103,7 +103,7 @@ def call_updater(cfg, section, updater_script, log_dir, dry_run=False):
 
     timeout_cmd = []
     if timeout:
-        timeout_cmd = ["timeout", str(timeout)]
+        timeout_cmd = ["timeout", "--kill-after=60", str(timeout)]
 
     if dry_run:
         if timeout:
