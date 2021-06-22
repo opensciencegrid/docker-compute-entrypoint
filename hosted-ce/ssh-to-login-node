@@ -1,0 +1,11 @@
+#!/bin/bash
+set -e
+if [[ $(id -u) == 0 ]]; then
+    user=${1?You must specify a user if you are root}
+    shift
+else
+    user=$(id -un)
+fi
+users_ssh_config=/home/$user/.ssh/config
+login_host=$(awk '/^Host/ {print $2; exit}' "$users_ssh_config")
+exec ssh -l "$user" -F "$users_ssh_config" "$login_host" "$@"
