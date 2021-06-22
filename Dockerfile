@@ -121,7 +121,6 @@ COPY hosted-ce/overrides/HTCONDOR-451.allow-batch_gahp.patch /tmp
 RUN [[ $BASE_YUM_REPO != 'release' ]] || patch -d / -p0 < /tmp/HTCONDOR-451.allow-batch_gahp.patch
 
 COPY hosted-ce/ssh-to-login-node /usr/local/bin
-RUN chmod +x /usr/local/bin/ssh-to-login-node
 
 # Set up Bosco override dir from Git repo (SOFTWARE-3903)
 # Expects a Git repo with the following directory structure:
