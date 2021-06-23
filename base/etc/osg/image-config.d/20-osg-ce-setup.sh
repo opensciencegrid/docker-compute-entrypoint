@@ -57,7 +57,7 @@ orig_hostkey_path=/etc/grid-security-orig.d/hostkey.pem
 
 certbot_opts="--noninteractive --agree-tos --standalone --email $CE_CONTACT -d $CE_HOSTNAME"
 
-[[ $LE_STAGING == "true" ]] && certbot_opts="$certbot_opts --dry-run"
+[[ $LE_STAGING == "true" ]] && certbot_opts="$certbot_opts --test-cert"
 
 if [ ! -f $hostcert_path ] || [ ! -f $hostkey_path ]; then
     if [[ -f $orig_hostcert_path && -f $orig_hostkey_path ]]; then
