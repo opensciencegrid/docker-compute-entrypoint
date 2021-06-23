@@ -35,8 +35,11 @@ osg-configure -c --verbose VERBOSE
 if [ "${DEVELOPER,,}" == 'true' ]; then
     echo "Establishing OSG Test certificate.."
     # don't do this in the image to make it smaller for prod use
-    yum install -y --enablerepo=devops-itb osg-ca-generator
-    osg-ca-generator --host --vo osgtest
+    git clone https://github.com/opensciencegrid/osg-ca-generator.git
+    pushd osg-ca-generator
+    make install
+    osg-ca-generator --host
+    popd
 fi
 
 
