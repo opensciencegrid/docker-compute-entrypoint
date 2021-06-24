@@ -48,10 +48,6 @@ RUN chmod 644 /etc/cron.d/fetch-crl
 # HTCondor-CE.
 COPY base/overrides/condor_ce_jobmetrics /usr/share/condor-ce/condor_ce_jobmetrics
 
-# Workaround BatchRuntime expresion bug (HTCONDOR-506)
-COPY base/overrides/HTCONDOR-506.evalset-batchruntime.patch /tmp
-RUN [[ $BASE_YUM_REPO != 'release' ]] || patch -d / -p0 < /tmp/HTCONDOR-506.evalset-batchruntime.patch
-
 #################
 # osg-ce-condor #
 #################
@@ -113,12 +109,6 @@ RUN patch -d / -p0 < /tmp/skip_key_copy.patch
 # Add Scientific Linux OS detection to bosco_cluster (HTCONDOR-503)
 COPY hosted-ce/overrides/HTCONDOR-503.add-sl-support.patch /tmp
 RUN patch -d / -p0 < /tmp/HTCONDOR-503.add-sl-support.patch
-
-# Allow the Gridmanager to specify 'batch_gahp' for its remote command
-# Required for HTCondor 9.0.0 on the CE and Bosco 1.3 usage
-# Can be dropped when HTCONDOR-451 has been fixed and released in the OSG
-COPY hosted-ce/overrides/HTCONDOR-451.allow-batch_gahp.patch /tmp
-RUN [[ $BASE_YUM_REPO != 'release' ]] || patch -d / -p0 < /tmp/HTCONDOR-451.allow-batch_gahp.patch
 
 COPY hosted-ce/ssh-to-login-node /usr/local/bin
 
