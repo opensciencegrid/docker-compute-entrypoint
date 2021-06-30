@@ -48,6 +48,14 @@ RUN chmod 644 /etc/cron.d/fetch-crl
 # HTCondor-CE.
 COPY base/overrides/condor_ce_jobmetrics /usr/share/condor-ce/condor_ce_jobmetrics
 
+# Workaround BatchRuntime expresion bug (HTCONDOR-506)
+COPY base/overrides/HTCONDOR-506.evalset-batchruntime.patch /tmp
+RUN patch -d / -p0 < /tmp/HTCONDOR-506.evalset-batchruntime.patch
+RUN if ! grep -qi 'EVALSET.*BatchRuntime.*maxWallTime' /usr/share/condor-ce/config.d/01-ce-router-defaults.conf; then  \
+        echo "HTCONDOR-506 (BatchRuntime) fix missing!";  \
+        exit 1;  \
+    fi
+
 #################
 # osg-ce-condor #
 #################
