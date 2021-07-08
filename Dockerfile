@@ -117,6 +117,10 @@ RUN patch -d / -p0 < /tmp/skip_key_copy.patch
 # Add Scientific Linux OS detection to bosco_cluster (HTCONDOR-503)
 COPY hosted-ce/overrides/HTCONDOR-503.add-sl-support.patch /tmp
 RUN [[ $BASE_YUM_REPO == "development" ]] || patch -d / -p0 < /tmp/HTCONDOR-503.add-sl-support.patch
+RUN if ! fgrep '(rhel|centos|scientific)' /usr/bin/bosco_cluster; then  \
+        echo "HTCONDOR-503 (SL support) fix missing!";  \
+        exit 1;  \
+    fi
 
 COPY hosted-ce/ssh-to-login-node /usr/local/bin
 
