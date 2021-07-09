@@ -151,7 +151,7 @@ grep -qs '^OSG_GRID="/cvmfs/oasis.opensciencegrid.org/osg-software/osg-wn-client
 # Enable bosco_cluster debug output
 bosco_cluster_opts=(-d )
 # Remote site admins set up SSH key access out-of-band
-bosco_cluster_opts+=(--copy-ssh-keys no)
+bosco_cluster_opts+=(--copy-ssh-key no)
 
 if [[ -n $OVERRIDE_DIR ]]; then
     if [[ -d $OVERRIDE_DIR ]]; then
