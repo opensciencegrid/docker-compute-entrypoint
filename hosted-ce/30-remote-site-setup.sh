@@ -164,6 +164,10 @@ fi
 # Add the ability for admins to override the default Bosco tarball URL (SOFTWARE-4537)
 [[ $BOSCO_TARBALL_URL ]] && bosco_cluster_opts+=(--url "$BOSCO_TARBALL_URL")
 
+if ! fgrep -- '--copy-ssh-key' /usr/bin/bosco_cluster; then
+    bosco_cluster_opts+=(--copy-ssh-keys no)
+fi
+
 for ruser in $users; do
     setup_ssh_config
 done
