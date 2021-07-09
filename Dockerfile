@@ -111,8 +111,8 @@ RUN patch -d / -p0 < /tmp/bosco_cluster_xtrace.patch
 
 # HACK: Don't copy over the SSH pub key to the remote side. We set
 # this up with the site out of band.
-COPY hosted-ce/overrides/skip_key_copy.patch /tmp
-RUN [[ $BASE_YUM_REPO == "development" ]] || patch -d / -p0 < /tmp/skip_key_copy.patch
+COPY hosted-ce/overrides/HTCONDOR-270.skip-key-copy.patch /tmp
+RUN [[ $BASE_YUM_REPO == "development" ]] || patch -d / -p0 < /tmp/HTCONDOR-270.skip-key-copy.patch
 RUN if ! fgrep -q -- '--copy-ssh-key' /usr/bin/bosco_cluster; then  \
         echo "HTCONDOR-270 (skip SSH key copy) fix missing!";  \
         exit 1;  \

@@ -150,6 +150,9 @@ grep -qs '^OSG_GRID="/cvmfs/oasis.opensciencegrid.org/osg-software/osg-wn-client
 
 # Enable bosco_cluster debug output
 bosco_cluster_opts=(-d )
+# Remote site admins set up SSH key access out-of-band
+bosco_cluster_opts+=(--copy-ssh-keys no)
+
 if [[ -n $OVERRIDE_DIR ]]; then
     if [[ -d $OVERRIDE_DIR ]]; then
         bosco_cluster_opts+=(-o "$OVERRIDE_DIR")
@@ -163,10 +166,6 @@ fi
 
 # Add the ability for admins to override the default Bosco tarball URL (SOFTWARE-4537)
 [[ $BOSCO_TARBALL_URL ]] && bosco_cluster_opts+=(--url "$BOSCO_TARBALL_URL")
-
-if ! fgrep -- '--copy-ssh-key' /usr/bin/bosco_cluster; then
-    bosco_cluster_opts+=(--copy-ssh-keys no)
-fi
 
 for ruser in $users; do
     setup_ssh_config
