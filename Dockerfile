@@ -112,7 +112,7 @@ RUN patch -d / -p0 < /tmp/bosco_cluster_xtrace.patch
 # HACK: Don't copy over the SSH pub key to the remote side. We set
 # this up with the site out of band.
 COPY hosted-ce/overrides/HTCONDOR-270.skip-key-copy.patch /tmp
-RUN [[ $BASE_YUM_REPO == "development" ]] || patch -d / -p0 < /tmp/HTCONDOR-270.skip-key-copy.patch
+RUN [[ $BASE_YUM_REPO != "release" ]] || patch -d / -p0 < /tmp/HTCONDOR-270.skip-key-copy.patch
 RUN if ! fgrep -q -- '--copy-ssh-key' /usr/bin/bosco_cluster; then  \
         echo "HTCONDOR-270 (skip SSH key copy) fix missing!";  \
         exit 1;  \
@@ -120,7 +120,7 @@ RUN if ! fgrep -q -- '--copy-ssh-key' /usr/bin/bosco_cluster; then  \
 
 # Add Scientific Linux OS detection to bosco_cluster (HTCONDOR-503)
 COPY hosted-ce/overrides/HTCONDOR-503.add-sl-support.patch /tmp
-RUN [[ $BASE_YUM_REPO == "development" ]] || patch -d / -p0 < /tmp/HTCONDOR-503.add-sl-support.patch
+RUN [[ $BASE_YUM_REPO != "release" ]] || patch -d / -p0 < /tmp/HTCONDOR-503.add-sl-support.patch
 RUN if ! fgrep '(rhel|centos|scientific)' /usr/bin/bosco_cluster; then  \
         echo "HTCONDOR-503 (SL support) fix missing!";  \
         exit 1;  \
