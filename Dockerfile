@@ -106,7 +106,7 @@ RUN if ! fgrep -q -- '--copy-ssh-key' /usr/bin/bosco_cluster; then  \
 
 # FIXME: Remove this check after a successful build
 # Add Scientific Linux OS detection to bosco_cluster (HTCONDOR-503)
-RUN if ! fgrep '(rhel|centos|scientific)' /usr/bin/bosco_cluster; then  \
+RUN if ! fgrep '(rhel|centos|' /usr/bin/bosco_cluster; then  \
         echo "HTCONDOR-503 (SL support) fix missing!";  \
         exit 1;  \
     fi
