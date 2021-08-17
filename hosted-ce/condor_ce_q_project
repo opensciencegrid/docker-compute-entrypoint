@@ -1,5 +1,5 @@
 #!/bin/sh
-condor_ce_q --print-format - "$@" <<'__END__'
+condor_ce_q -print-format - "$@" <<'__END__'
 SELECT
     (RoutedJob ?: "-")                          AS "R"   WIDTH 1
     ID                                          AS "JOB ID"   PRINTAS JOB_ID WIDTH 8
