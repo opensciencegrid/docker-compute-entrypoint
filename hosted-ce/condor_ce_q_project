@@ -1,8 +1,11 @@
 #!/bin/sh
 condor_ce_q -print-format - "$@" <<'__END__'
 SELECT
-    (RoutedJob ?: "-")                          AS "R"   WIDTH 1
-    ID                                          AS "JOB ID"   PRINTAS JOB_ID WIDTH 8
+    (RoutedFromJobId ?: "")                     AS "    FROM" WIDTH 8
+    (!isUndefined(RoutedFromJobId) ? " ->" : "") AS " " WIDTH 3
+    ID                                          AS "  JOB ID"   PRINTAS JOB_ID WIDTH 8
+    (!isUndefined(RoutedToJobId) ? "-> " : "")  AS " " WIDTH 3
+    (RoutedToJobId ?: "")                       AS "TO" WIDTH -8
     Owner                                       AS "OWNER"   PRINTAS OWNER WIDTH -8
     QDate                                       AS " SUBMITTED"   PRINTAS QDATE WIDTH -12
     JobStatus                                   AS "STATUS"   PRINTAS JOB_STATUS
