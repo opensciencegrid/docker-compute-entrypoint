@@ -16,11 +16,7 @@ RUN groupadd -g 64 -r condor && \
     useradd -r -g condor -d /var/lib/condor -s /sbin/nologin \
       -u 64 -c "Owner of HTCondor Daemons" condor
 
-RUN if [[ $BASE_YUM_REPO = release ]]; then \
-       yumrepo=osg-upcoming; else \
-       yumrepo=osg-upcoming-$BASE_YUM_REPO; fi && \
-    yum install -y --enablerepo=$yumrepo \
-                   osg-ce-bosco \
+RUN yum install -y osg-ce-bosco \
                    # FIXME: avoid htcondor-ce-collector conflict
                    htcondor-ce \
                    htcondor-ce-view \
@@ -50,7 +46,11 @@ COPY base/overrides/condor_ce_jobmetrics /usr/share/condor-ce/condor_ce_jobmetri
 
 # Workaround BatchRuntime expresion bug (HTCONDOR-506)
 COPY base/overrides/HTCONDOR-506.evalset-batchruntime.patch /tmp
-RUN [[ $BASE_YUM_REPO == 'development' ]] || patch -d / -p0 < /tmp/HTCONDOR-506.evalset-batchruntime.patch
+RUN patch -d / -p0 < /tmp/HTCONDOR-506.evalset-batchruntime.patch
+RUN if ! grep -qi 'EVALSET.*BatchRuntime.*maxWallTime' /usr/share/condor-ce/config.d/01-ce-router-defaults.conf; then  \
+        echo "HTCONDOR-506 (BatchRuntime) fix missing!";  \
+        exit 1;  \
+    fi
 
 #################
 # osg-ce-condor #
@@ -61,11 +61,7 @@ ARG BASE_YUM_REPO=release
 LABEL maintainer "OSG Software <help@opensciencegrid.org>"
 LABEL name "osg-ce-condor"
 
-RUN if [[ $BASE_YUM_REPO = release ]]; then \
-       yumrepo=osg-upcoming; else \
-       yumrepo=osg-upcoming-$BASE_YUM_REPO; fi && \
-     yum install -y --enablerepo=$yumrepo \
-                   osg-ce-condor && \
+RUN yum install -y osg-ce-condor && \
     yum clean all && \
     rm -rf /var/cache/yum/
 
@@ -84,11 +80,7 @@ LABEL name "hosted-ce"
 
 ARG BASE_YUM_REPO=release
 
-RUN if [[ $BASE_YUM_REPO = release ]]; then \
-       yumrepo=osg-upcoming; else \
-       yumrepo=osg-upcoming-$BASE_YUM_REPO; fi && \
-    yum install -y --enablerepo=$yumrepo \
-                   osg-ce-bosco && \
+RUN yum install -y osg-ce-bosco && \
     rm -rf /var/cache/yum/
 
 COPY hosted-ce/30-remote-site-setup.sh /etc/osg/image-config.d/
@@ -105,20 +97,22 @@ RUN patch -d / -p0 < /tmp/ssh_q.patch
 COPY hosted-ce/overrides/bosco_cluster_xtrace.patch /tmp
 RUN patch -d / -p0 < /tmp/bosco_cluster_xtrace.patch
 
-# HACK: Don't copy over the SSH pub key to the remote side. We set
-# this up with the site out of band.
-COPY hosted-ce/overrides/skip_key_copy.patch /tmp
-RUN patch -d / -p0 < /tmp/skip_key_copy.patch
+# FIXME: Remove this check after a successful build
+# Don't copy the SSH key (HTCONDOR-270)
+RUN if ! fgrep -q -- '--copy-ssh-key' /usr/bin/bosco_cluster; then  \
+        echo "HTCONDOR-270 (skip SSH key copy) fix missing!";  \
+        exit 1;  \
+    fi
 
+# FIXME: Remove this check after a successful build
 # Add Scientific Linux OS detection to bosco_cluster (HTCONDOR-503)
-COPY hosted-ce/overrides/HTCONDOR-503.add-sl-support.patch /tmp
-RUN patch -d / -p0 < /tmp/HTCONDOR-503.add-sl-support.patch
+RUN if ! fgrep '(rhel|centos|' /usr/bin/bosco_cluster; then  \
+        echo "HTCONDOR-503 (SL support) fix missing!";  \
+        exit 1;  \
+    fi
 
-# Allow the Gridmanager to specify 'batch_gahp' for its remote command
-# Required for HTCondor 9.0.0 on the CE and Bosco 1.3 usage
-# Can be dropped when HTCONDOR-451 has been fixed and released in the OSG
-COPY hosted-ce/overrides/HTCONDOR-451.allow-batch_gahp.patch /tmp
-RUN [[ $BASE_YUM_REPO == 'development' ]] || patch -d / -p0 < /tmp/HTCONDOR-451.allow-batch_gahp.patch
+COPY hosted-ce/ssh-to-login-node /usr/local/bin
+COPY hosted-ce/condor_ce_q_project /usr/local/bin
 
 # Set up Bosco override dir from Git repo (SOFTWARE-3903)
 # Expects a Git repo with the following directory structure:
