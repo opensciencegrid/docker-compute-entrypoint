@@ -1,5 +1,7 @@
 #!/bin/bash
 
+. /etc/osg/image-config.d/ce-common-startup
+
 set -x
 
 # save old -e status
@@ -11,7 +13,8 @@ fi
 
 set -e
 
-BOSCO_KEY=/etc/osg/bosco.key
+DEFAULT_BOSCO_KEY=/etc/osg/bosco.key
+BOSCOKEYS_DIR=/etc/osg/boscokeys
 ENDPOINT_CONFIG=/etc/endpoints.ini
 SKIP_WN_INSTALL=no
 
@@ -32,7 +35,16 @@ function debug_file_contents {
 function fetch_remote_os_info {
     ruser=$1
     rhost=$2
-    ssh -q -i $BOSCO_KEY "$ruser@$rhost" "cat /etc/os-release"
+    ssh -q -i "$(get_bosco_key "$ruser")" "$ruser@$rhost" "cat /etc/os-release"
+}
+
+function get_bosco_key {
+    ruser=$1
+    if [[ -f $BOSCOKEYS_DIR/${ruser}.key ]]; then
+        echo "$BOSCOKEYS_DIR/${ruser}.key"
+    else
+        echo "$DEFAULT_BOSCO_KEY"
+    fi
 }
 
 setup_ssh_config () {
@@ -45,7 +57,7 @@ setup_ssh_config () {
 
   # copy Bosco key
   ssh_key=$ssh_dir/bosco_key.rsa
-  cp $BOSCO_KEY $ssh_key
+  cp "$(get_bosco_key "$ruser")" $ssh_key
   chmod 600 $ssh_key
   chown "${ruser}": $ssh_key
 
@@ -77,10 +89,11 @@ EOF
 setup_endpoints_ini () {
     echo "Setting up endpoint.ini entry for ${ruser}@$remote_fqdn..."
     remote_os_major_ver=$1
+    ssh_key=$(get_bosco_key "$ruser")
     # The WN client updater uses "remote_dir" for WN client
     # configuration and remote copy. We need the absolute path
     # specifically for fetch-crl
-    remote_home_dir=$(ssh -q -i $BOSCO_KEY "${ruser}@$remote_fqdn" pwd)
+    remote_home_dir=$(ssh -q -i $ssh_key "${ruser}@$remote_fqdn" pwd)
     osg_ver=3.4
     if [[ $remote_os_major_ver -gt 6 ]]; then
         osg_ver=3.5
@@ -91,6 +104,7 @@ local_user = ${ruser}
 remote_host = $remote_fqdn
 remote_user = ${ruser}
 remote_dir = $remote_home_dir/bosco-osg-wn-client
+ssh_key = $ssh_key
 upstream_url = https://repo.opensciencegrid.org/tarball-install/${osg_ver}/osg-wn-client-latest.el${remote_os_major_ver}.x86_64.tar.gz
 EOF
 }
@@ -106,17 +120,27 @@ fi
 REMOTE_HOST_KEY=`ssh-keyscan -p "$remote_port" "$remote_fqdn"`
 [[ -n $REMOTE_HOST_KEY ]] || errexit "Failed to determine host key for $remote_fqdn:$remote_port"
 
-# HACK: Symlink the Bosco key to the location expected by
+
+users=$(get_mapped_users)
+[[ -n $users ]] || errexit "Did not find any user mappings"
+
+# Use the first user for things we only need once
+firstuser=$(printf "%s\n" "$users" | head -n1)
+id -u "$firstuser" &>/dev/null || errexit "Expected user $firstuser doesn't exist"
+
+firstuser_key=$(get_bosco_key "$firstuser")
+[[ -f $firstuser_key ]] || errexit "Failed to get SSH key for $firstuser"
+
+# HACK: Copy the Bosco key to the location expected by
 # bosco_cluster so it doesn't go and try to generate a new one
 root_ssh_dir=/root/.ssh/
 mkdir -p $root_ssh_dir
 chmod 700 $root_ssh_dir
-ln -s $BOSCO_KEY $root_ssh_dir/bosco_key.rsa
+install -o root -g root -m 0600 "$firstuser_key" $root_ssh_dir/bosco_key.rsa
 
 cat <<EOF > /etc/ssh/ssh_config
 Host $remote_fqdn
   Port $remote_port
-  IdentityFile ${BOSCO_KEY}
   ControlMaster auto
   ControlPath /tmp/cm-%i-%r@%h:%p
   ControlPersist  15m
@@ -133,10 +157,6 @@ if [[ -n $BOSCO_GIT_ENDPOINT && -n $BOSCO_DIRECTORY ]]; then
 fi
 unset GIT_SSH_COMMAND
 
-users=$(cat /etc/grid-security/grid-mapfile /etc/grid-security/voms-mapfile | \
-            awk '/^"[^"]+" +[a-zA-Z0-9\-\._]+$/ {print $NF}' | \
-            sort -u)
-[[ -n $users ]] || errexit "Did not find any user mappings in the VOMS or Grid mapfiles"
 
 # Allow the condor user to run the WN client updater as the local users
 CONDOR_SUDO_FILE=/etc/sudoers.d/10-condor-ssh
@@ -176,7 +196,7 @@ done
 ###################
 
 # We have to pick a user for SSH, may as well be the first one
-remote_os_info=$(fetch_remote_os_info "$(printf "%s\n" $users | head -n1)" "$remote_fqdn")
+remote_os_info=$(fetch_remote_os_info "$firstuser" "$remote_fqdn")
 remote_os_ver=$(echo "$remote_os_info" | awk -F '=' '/^VERSION_ID/ {print $2}' | tr -d '"')
 
 # Skip WN client installation for non-RHEL-based remote clusters
@@ -190,7 +210,7 @@ for ruser in $users; do
     echo "Installing remote Bosco installation for ${ruser}@$remote_fqdn"
     [[ $SKIP_WN_INSTALL == 'no' ]] && setup_endpoints_ini "${remote_os_ver%%.*}"
     # $REMOTE_BATCH needs to be specified in the environment
-    bosco_cluster "${bosco_cluster_opts[@]}" -a "${ruser}@$remote_fqdn" "$REMOTE_BATCH"
+    sudo -u $ruser bosco_cluster "${bosco_cluster_opts[@]}" -a "${ruser}@$remote_fqdn" "$REMOTE_BATCH"
 
     echo "Installing environment files for $ruser@$remote_fqdn..."
     # Copy over environment files to allow for dynamic WN variables (SOFTWARE-4117)
