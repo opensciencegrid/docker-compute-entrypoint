@@ -1,0 +1,14 @@
+#!/bin/sh
+condor_ce_q -print-format - "$@" <<'__END__'
+SELECT
+    ID                                               AS "  JOB ID"   PRINTAS JOB_ID WIDTH 8
+    (!isUndefined(RoutedToJobId) ? "->" : "")        AS " " WIDTH 2
+    (RoutedToJobId ?: "-")                           AS "ROUTED" WIDTH -8
+    Owner                                            AS "OWNER"   WIDTH -8
+    formattime(QDate, "%m/%d %H:%M")                 AS " SUBMITTED"   WIDTH -12
+    JobStatus                                        AS "ST"   PRINTAS JOB_STATUS
+    formattime(EnteredCurrentStatus, "%m/%d %H:%M")  AS " SINCE"   WIDTH -12
+    (OSG_PROJECT_NAME ?: (ProjectName ?: "-"))       AS "[OSG] PROJECT NAME"
+    (BatchProject ?: "-")                            AS "BATCH PROJECT"
+__END__
+
