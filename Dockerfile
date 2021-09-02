@@ -113,6 +113,7 @@ RUN if ! fgrep '(rhel|centos|' /usr/bin/bosco_cluster; then  \
 
 COPY hosted-ce/ssh-to-login-node /usr/local/bin
 COPY hosted-ce/condor_ce_q_project /usr/local/bin
+COPY hosted-ce/condor_ce_history_project /usr/local/bin
 
 # Set up Bosco override dir from Git repo (SOFTWARE-3903)
 # Expects a Git repo with the following directory structure:
