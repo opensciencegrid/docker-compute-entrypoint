@@ -40,14 +40,6 @@ COPY base/etc/supervisord.d/* /etc/supervisord.d/
 COPY base/etc/cron.d/fetch-crl /etc/cron.d/fetch-crl
 RUN chmod 644 /etc/cron.d/fetch-crl
 
-# Workaround BatchRuntime expresion bug (HTCONDOR-506)
-COPY base/overrides/HTCONDOR-506.evalset-batchruntime.patch /tmp
-RUN patch -d / -p0 < /tmp/HTCONDOR-506.evalset-batchruntime.patch
-RUN if ! grep -qi 'EVALSET.*BatchRuntime.*maxWallTime' /usr/share/condor-ce/config.d/01-ce-router-defaults.conf; then  \
-        echo "HTCONDOR-506 (BatchRuntime) fix missing!";  \
-        exit 1;  \
-    fi
-
 #################
 # osg-ce-condor #
 #################
@@ -92,20 +84,6 @@ RUN patch -d / -p0 < /tmp/ssh_q.patch
 # Enable bosco_cluster xtrace
 COPY hosted-ce/overrides/bosco_cluster_xtrace.patch /tmp
 RUN patch -d / -p0 < /tmp/bosco_cluster_xtrace.patch
-
-# FIXME: Remove this check after a successful build
-# Don't copy the SSH key (HTCONDOR-270)
-RUN if ! fgrep -q -- '--copy-ssh-key' /usr/bin/bosco_cluster; then  \
-        echo "HTCONDOR-270 (skip SSH key copy) fix missing!";  \
-        exit 1;  \
-    fi
-
-# FIXME: Remove this check after a successful build
-# Add Scientific Linux OS detection to bosco_cluster (HTCONDOR-503)
-RUN if ! fgrep '(rhel|centos|' /usr/bin/bosco_cluster; then  \
-        echo "HTCONDOR-503 (SL support) fix missing!";  \
-        exit 1;  \
-    fi
 
 COPY hosted-ce/ssh-to-login-node /usr/local/bin
 COPY hosted-ce/condor_ce_q_project /usr/local/bin
