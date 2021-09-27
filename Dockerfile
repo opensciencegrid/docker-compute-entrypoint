@@ -85,20 +85,6 @@ RUN patch -d / -p0 < /tmp/ssh_q.patch
 COPY hosted-ce/overrides/bosco_cluster_xtrace.patch /tmp
 RUN patch -d / -p0 < /tmp/bosco_cluster_xtrace.patch
 
-# FIXME: Remove this check after a successful build
-# Don't copy the SSH key (HTCONDOR-270)
-RUN if ! fgrep -q -- '--copy-ssh-key' /usr/bin/bosco_cluster; then  \
-        echo "HTCONDOR-270 (skip SSH key copy) fix missing!";  \
-        exit 1;  \
-    fi
-
-# FIXME: Remove this check after a successful build
-# Add Scientific Linux OS detection to bosco_cluster (HTCONDOR-503)
-RUN if ! fgrep '(rhel|centos|' /usr/bin/bosco_cluster; then  \
-        echo "HTCONDOR-503 (SL support) fix missing!";  \
-        exit 1;  \
-    fi
-
 COPY hosted-ce/ssh-to-login-node /usr/local/bin
 COPY hosted-ce/condor_ce_q_project /usr/local/bin
 COPY hosted-ce/condor_ce_history_project /usr/local/bin
