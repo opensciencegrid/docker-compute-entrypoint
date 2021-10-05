@@ -12,6 +12,8 @@ fi
 set -e
 
 BOSCO_KEY=/etc/osg/bosco.key
+# Optional SSH certificate
+BOSCO_CERT=/etc/osg/bosco.cert
 ENDPOINT_CONFIG=/etc/endpoints.ini
 SKIP_WN_INSTALL=no
 
@@ -49,12 +51,22 @@ setup_ssh_config () {
   chmod 600 $ssh_key
   chown "${ruser}": $ssh_key
 
+  # copy Bosco certificate
+  if [[ -f $BOSCO_CERT ]]; then
+      ssh_cert=$ssh_dir/bosco.cert
+      cp $BOSCO_CERT $ssh_cert
+      chmod 600 $ssh_cert
+      chown "${ruser}": $ssh_cert
+      cert_config="CertificateFile ${ssh_cert}"
+  fi
+
   ssh_config=$ssh_dir/config
   cat <<EOF > "$ssh_config"
 Host $remote_fqdn
   Port $remote_port
   IdentityFile ${ssh_key}
   IdentitiesOnly yes
+  ${cert_config}
 EOF
   debug_file_contents "$ssh_config"
 
