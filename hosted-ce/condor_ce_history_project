@@ -1,5 +1,5 @@
 #!/bin/sh
-condor_ce_q -print-format - "$@" <<'__END__'
+condor_ce_history -print-format - "$@" <<'__END__'
 SELECT
     ID                                               AS "  JOB ID"   PRINTAS JOB_ID WIDTH 8
     (!isUndefined(RoutedToJobId) ? "->" : "")        AS " " WIDTH 2
