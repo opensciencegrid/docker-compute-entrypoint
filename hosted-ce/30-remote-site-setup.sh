@@ -125,6 +125,7 @@ mkdir -p $root_ssh_dir
 chmod 700 $root_ssh_dir
 ln -s $BOSCO_KEY $root_ssh_dir/bosco_key.rsa
 
+[[ -f $BOSCO_CERT ]] && SSH_CERT_CONFIG="CertificateFile ${BOSCO_CERT}"
 cat <<EOF > /etc/ssh/ssh_config
 Host $remote_fqdn
   Port $remote_port
@@ -132,6 +133,7 @@ Host $remote_fqdn
   ControlMaster auto
   ControlPath /tmp/cm-%i-%r@%h:%p
   ControlPersist  15m
+  ${SSH_CERT_CONFIG}
 EOF
 debug_file_contents /etc/ssh/ssh_config
 
