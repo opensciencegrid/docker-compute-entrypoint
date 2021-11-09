@@ -38,6 +38,7 @@ function fetch_remote_os_info {
 }
 
 setup_ssh_config () {
+  extra_config="$1"
   echo "Setting up SSH for user ${ruser}"
   ssh_dir="/home/${ruser}/.ssh"
   # setup user and SSH dir
@@ -65,6 +66,7 @@ Host $remote_fqdn
   Port $remote_port
   IdentityFile ${ssh_key}
   IdentitiesOnly yes
+  ${extra_config}
 EOF
   debug_file_contents "$ssh_config"
 
@@ -123,6 +125,14 @@ mkdir -p $root_ssh_dir
 chmod 700 $root_ssh_dir
 ln -s $BOSCO_KEY $root_ssh_dir/bosco_key.rsa
 
+extra_ssh_config=""
+
+if [[ -n $SSH_PROXY_JUMP ]]; then
+    extra_ssh_config+="
+  ProxyJump $SSH_PROXY_JUMP
+"
+fi
+
 cat <<EOF > /etc/ssh/ssh_config
 Host $remote_fqdn
   Port $remote_port
@@ -130,6 +140,7 @@ Host $remote_fqdn
   ControlMaster auto
   ControlPath /tmp/cm-%i-%r@%h:%p
   ControlPersist  15m
+  ${extra_ssh_config}
 EOF
 debug_file_contents /etc/ssh/ssh_config
 
@@ -178,7 +189,7 @@ fi
 [[ $BOSCO_TARBALL_URL ]] && bosco_cluster_opts+=(--url "$BOSCO_TARBALL_URL")
 
 for ruser in $users; do
-    setup_ssh_config
+    setup_ssh_config "$extra_ssh_config"
 done
 
 ###################
