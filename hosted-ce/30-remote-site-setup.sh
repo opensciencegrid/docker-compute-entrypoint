@@ -15,7 +15,7 @@ BOSCO_KEY=/etc/osg/bosco.key
 # Optional SSH certificate
 BOSCO_CERT=${BOSCO_KEY}-cert.pub
 ENDPOINT_CONFIG=/etc/endpoints.ini
-KNOWN_HOSTS=/tmp/known_hosts
+KNOWN_HOSTS=/etc/osg/ssh_known_hosts
 SKIP_WN_INSTALL=no
 
 function errexit {
