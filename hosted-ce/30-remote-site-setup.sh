@@ -15,6 +15,7 @@ BOSCO_KEY=/etc/osg/bosco.key
 # Optional SSH certificate
 BOSCO_CERT=${BOSCO_KEY}-cert.pub
 ENDPOINT_CONFIG=/etc/endpoints.ini
+KNOWN_HOSTS=/tmp/known_hosts
 SKIP_WN_INSTALL=no
 
 function errexit {
@@ -115,7 +116,11 @@ else
     remote_port=22
 fi
 
-REMOTE_HOST_KEY=`ssh-keyscan -p "$remote_port" "$remote_fqdn"`
+if [[ -f $KNOWN_HOSTS ]]; then
+    REMOTE_HOST_KEY=$(cat $KNOWN_HOSTS)
+else
+    REMOTE_HOST_KEY=`ssh-keyscan -p "$remote_port" "$remote_fqdn"`
+fi
 [[ -n $REMOTE_HOST_KEY ]] || errexit "Failed to determine host key for $remote_fqdn:$remote_port"
 
 # HACK: Symlink the Bosco key to the location expected by
