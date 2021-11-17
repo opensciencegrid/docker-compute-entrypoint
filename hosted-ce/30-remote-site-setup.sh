@@ -130,6 +130,11 @@ mkdir -p $root_ssh_dir
 chmod 700 $root_ssh_dir
 ln -s $BOSCO_KEY $root_ssh_dir/bosco_key.rsa
 
+# HACK: ProxyJump appears to assume default locations for SSH key and
+# certificate locations
+cp $BOSCO_KEY $root_ssh_dir/id_rsa
+[[ -z $SSH_PROXY_JUMP ]] || cp $BOSCO_CERT $root_ssh_dir/id_rsa-cert.pub
+
 extra_ssh_config=""
 
 if [[ -n $SSH_PROXY_JUMP ]]; then
