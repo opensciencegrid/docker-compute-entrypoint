@@ -35,7 +35,7 @@ function debug_file_contents {
 function fetch_remote_os_info {
     ruser=$1
     rhost=$2
-    ssh -q -i $BOSCO_KEY "$ruser@$rhost" "cat /etc/os-release"
+    ssh -q "$ruser@$rhost" "cat /etc/os-release"
 }
 
 setup_ssh_config () {
@@ -96,7 +96,7 @@ setup_endpoints_ini () {
     # The WN client updater uses "remote_dir" for WN client
     # configuration and remote copy. We need the absolute path
     # specifically for fetch-crl
-    remote_home_dir=$(ssh -q -i $BOSCO_KEY "${ruser}@$remote_fqdn" pwd)
+    remote_home_dir=$(ssh -q "${ruser}@$remote_fqdn" pwd)
     osg_ver=3.4
     if [[ $remote_os_major_ver -gt 6 ]]; then
         osg_ver=3.5
