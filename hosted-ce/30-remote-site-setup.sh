@@ -138,8 +138,7 @@ cp $BOSCO_KEY $root_ssh_dir/id_rsa
 extra_ssh_config=""
 
 if [[ -n $SSH_PROXY_JUMP ]]; then
-    extra_ssh_config+="
-  ProxyJump $SSH_PROXY_JUMP
+    extra_ssh_config+="ProxyJump $SSH_PROXY_JUMP
 "
 fi
 
