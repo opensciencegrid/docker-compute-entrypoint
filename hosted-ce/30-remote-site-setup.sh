@@ -48,10 +48,13 @@ setup_ssh_config () {
   chmod 700 $ssh_dir
 
   # copy Bosco key
-  ssh_key=$ssh_dir/bosco_key.rsa
+  ssh_key=$ssh_dir/id_rsa
   cp $BOSCO_KEY $ssh_key
   chmod 600 $ssh_key
   chown "${ruser}": $ssh_key
+  # HACK: Symlink the Bosco key to the location expected by
+  # bosco_cluster so it doesn't go and try to generate a new one
+  ln -s $ssh_key $ssh_dir/bosco_key.rsa
 
   # copy Bosco certificate
   if [[ -f $BOSCO_CERT ]]; then
@@ -123,38 +126,20 @@ else
 fi
 [[ -n $REMOTE_HOST_KEY ]] || errexit "Failed to determine host key for $remote_fqdn:$remote_port"
 
-# HACK: Symlink the Bosco key to the location expected by
-# bosco_cluster so it doesn't go and try to generate a new one
-root_ssh_dir=/root/.ssh/
-mkdir -p $root_ssh_dir
-chmod 700 $root_ssh_dir
-ln -s $BOSCO_KEY $root_ssh_dir/bosco_key.rsa
-
-# HACK: ProxyJump appears to assume default locations for SSH key and
-# certificate locations
-cp $BOSCO_KEY $root_ssh_dir/id_rsa
-[[ -z $SSH_PROXY_JUMP ]] || cp $BOSCO_CERT $root_ssh_dir/id_rsa-cert.pub
-
-extra_ssh_config=""
-
-if [[ -n $SSH_PROXY_JUMP ]]; then
-    extra_ssh_config+="ProxyJump $SSH_PROXY_JUMP
-"
-fi
-
-cat <<EOF > /etc/ssh/ssh_config
-Host $remote_fqdn
-  Port $remote_port
-  IdentityFile ${BOSCO_KEY}
-  ControlMaster auto
+extra_user_ssh_config=""
+extra_root_ssh_config="ControlMaster auto
   ControlPath /tmp/cm-%i-%r@%h:%p
   ControlPersist  15m
-  ${extra_ssh_config}
-EOF
-debug_file_contents /etc/ssh/ssh_config
+"
 
-echo "$REMOTE_HOST_KEY" >> /etc/ssh/ssh_known_hosts
-debug_file_contents /etc/ssh/ssh_known_hosts
+if [[ -n $SSH_PROXY_JUMP ]]; then
+    proxyjump_config="ProxyJump $SSH_PROXY_JUMP"
+    extra_root_ssh_config+="  $proxyjump_config"
+    extra_user_ssh_config+=$proxyjump_config
+fi
+
+ruser=root
+setup_ssh_config "$extra_root_ssh_config"
 
 # Populate the bosco override dir from a Git repo
 if [[ -n $BOSCO_GIT_ENDPOINT && -n $BOSCO_DIRECTORY ]]; then
@@ -198,7 +183,7 @@ fi
 [[ $BOSCO_TARBALL_URL ]] && bosco_cluster_opts+=(--url "$BOSCO_TARBALL_URL")
 
 for ruser in $users; do
-    setup_ssh_config "$extra_ssh_config"
+    setup_ssh_config "$extra_user_ssh_config"
 done
 
 ###################
