@@ -41,7 +41,7 @@ function fetch_remote_os_info {
 setup_ssh_config () {
   extra_config="$1"
   echo "Setting up SSH for user ${ruser}"
-  ssh_dir="/home/${ruser}/.ssh"
+  ssh_dir=$(eval echo "~${ruser}/.ssh")
   # setup user and SSH dir
   mkdir -p $ssh_dir
   chown "${ruser}": $ssh_dir
