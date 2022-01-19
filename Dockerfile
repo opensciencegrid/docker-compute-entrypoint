@@ -4,12 +4,14 @@
 
 # Specify the opensciencegrid/software-base image tag
 ARG BASE_YUM_REPO=release
+ARG BASE_OSG_SERIES=3.5
 
-FROM opensciencegrid/software-base:3.5-el7-$BASE_YUM_REPO AS base
+FROM opensciencegrid/software-base:$BASE_OSG_SERIES-el7-$BASE_YUM_REPO AS base
 LABEL maintainer "OSG Software <help@opensciencegrid.org>"
 
-# previous arg has gone out of scope
+# previous args have gone out of scope
 ARG BASE_YUM_REPO=release
+ARG BASE_OSG_SERIES=3.5
 
 # Ensure that the 'condor' UID/GID matches across containers
 RUN groupadd -g 64 -r condor && \
