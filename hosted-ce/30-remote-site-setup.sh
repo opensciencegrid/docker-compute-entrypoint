@@ -9,7 +9,7 @@ else
     olde=+e
 fi
 
-[[ ${HOSTED_CE_DEBUG:=false} == 'true' ]] || set -e
+[[ ${HOSTED_CE_CONTINUE_ON_ERROR:=false} == 'true' ]] || set -e
 
 BOSCO_KEY=/etc/osg/bosco.key
 # Optional SSH certificate
