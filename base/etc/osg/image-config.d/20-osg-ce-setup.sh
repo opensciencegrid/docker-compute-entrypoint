@@ -2,7 +2,9 @@
 
 . /etc/osg/image-config.d/ce-common-startup
 
-set -xe
+set -x
+
+[[ ${HOSTED_CE_DEBUG:=false} == 'true' ]] || set -e
 
 users=$(get_mapped_users)
 for user in $users; do
@@ -94,4 +96,6 @@ pvc_dirs+=(/var/lib/condor-ce
            /var/lib/condor-ce/spool/ceview)
 chown condor:condor ${pvc_dirs[*]}
 
-set +xe
+[[ ${HOSTED_CE_DEBUG} == 'true' ]] || set +e
+
+set +x
