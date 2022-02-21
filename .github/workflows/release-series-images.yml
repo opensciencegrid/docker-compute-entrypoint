@@ -119,7 +119,9 @@ jobs:
       with:
         push: ${{ github.event_name != 'pull_request' && startsWith(github.repository, 'opensciencegrid/') }}
         context: .
-        build-args: BASE_YUM_REPO=${{ matrix.repo }}
+        build-args: |
+          BASE_YUM_REPO=${{ matrix.repo }}
+          BASE_OSG_SERIES=${{ matrix.osg_series }}
         tags: "${{ steps.generate-tag-list.outputs.taglist }}"
         target: ${{ matrix.image }}
         cache-from: type=local,src=/tmp/.buildx-cache
