@@ -18,12 +18,7 @@ RUN groupadd -g 64 -r condor && \
     useradd -r -g condor -d /var/lib/condor -s /sbin/nologin \
       -u 64 -c "Owner of HTCondor Daemons" condor
 
-RUN if [[ $BASE_OSG_SERIES == '3.6' ]] && [[ $BASE_YUM_REPO != "release" ]]; then \
-       # Temporarily disable upcoming dev/testing since HTCondor 9.5.0-1
-       # removes condor-bosco
-       yum-config-manager --disable osg-upcoming-${BASE_YUM_REPO}; \
-    fi && \
-    yum install -y osg-ce-bosco \
+RUN yum install -y osg-ce-bosco \
                    # FIXME: avoid htcondor-ce-collector conflict
                    htcondor-ce \
                    htcondor-ce-view \
@@ -86,11 +81,15 @@ COPY hosted-ce/overrides/condor_ce_jobmetrics /usr/share/condor-ce/condor_ce_job
 
 # Use "ssh -q" in bosco_cluster until the chang has been upstreamed to condor
 COPY hosted-ce/overrides/ssh_q.patch /tmp
-RUN patch -d / -p0 < /tmp/ssh_q.patch
 
 # Enable bosco_cluster xtrace
 COPY hosted-ce/overrides/bosco_cluster_xtrace.patch /tmp
-RUN patch -d / -p0 < /tmp/bosco_cluster_xtrace.patch
+
+# Handle bosco_cluster -> condor_remote_cluster symlink
+RUN [[ $BASE_OSG_SERIES == "3.5" ]] || sed -i 's/bosco_cluster/condor_remote_cluster/g' /tmp/*.patch && \
+    patch -d / -p0 < /tmp/ssh_q.patch && \
+    patch -d / -p0 < /tmp/bosco_cluster_xtrace.patch
+
 
 COPY hosted-ce/ssh-to-login-node /usr/local/bin
 COPY hosted-ce/condor_ce_q_project /usr/local/bin
