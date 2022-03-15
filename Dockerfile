@@ -81,6 +81,7 @@ COPY hosted-ce/overrides/condor_ce_jobmetrics /usr/share/condor-ce/condor_ce_job
 
 # Use "ssh -q" in bosco_cluster until the chang has been upstreamed to condor
 COPY hosted-ce/overrides/ssh_q.patch /tmp
+RUN [[ $BASE_OSG_SERIES == "3.5" ]] || sed -i 's/bosco_cluster/condor_remote_cluster/g' /tmp/ssh_q.patch
 RUN patch -d / -p0 < /tmp/ssh_q.patch
 
 # Enable bosco_cluster xtrace
