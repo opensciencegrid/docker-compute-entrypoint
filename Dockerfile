@@ -18,12 +18,7 @@ RUN groupadd -g 64 -r condor && \
     useradd -r -g condor -d /var/lib/condor -s /sbin/nologin \
       -u 64 -c "Owner of HTCondor Daemons" condor
 
-RUN if [[ $BASE_OSG_SERIES == '3.6' ]] && [[ $BASE_YUM_REPO != "release" ]]; then \
-       # Temporarily disable upcoming dev/testing since HTCondor 9.5.0-1
-       # removes condor-bosco
-       yum-config-manager --disable osg-upcoming-${BASE_YUM_REPO}; \
-    fi && \
-    yum install -y osg-ce-bosco \
+RUN yum install -y osg-ce-bosco \
                    # FIXME: avoid htcondor-ce-collector conflict
                    htcondor-ce \
                    htcondor-ce-view \
