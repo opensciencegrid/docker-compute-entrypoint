@@ -6,6 +6,22 @@ set -x
 
 [[ ${HOSTED_CE_CONTINUE_ON_ERROR:=false} == 'true' ]] || set -e
 
+# Ensure that PVC dirs and subdirs exist and have the proper
+# ownership (SOFTWARE-4423)
+pvc_dirs=(/var/log/condor-ce/gratia
+          /var/lib/condor-ce/execute
+          /var/lib/condor-ce/gratia/data/
+          /var/lib/condor-ce/gratia/tmp/
+          /var/lib/condor-ce/spool/ceview/metrics
+          /var/lib/condor-ce/spool/ceview/vos)
+mkdir -p ${pvc_dirs[*]}
+
+pvc_dirs+=(/var/log/condor-ce
+           /var/lib/condor-ce
+           /var/lib/condor-ce/spool
+           /var/lib/condor-ce/spool/ceview)
+chown condor:condor ${pvc_dirs[*]}
+
 users=$(get_mapped_users)
 for user in $users; do
     echo "Creating local user ($user)..."
@@ -82,22 +98,6 @@ fi
 echo ">>>>> YOUR CERTIFICATE INFORMATION IS:"
 openssl x509 -in $hostcert_path -text
 echo "><><><><><><><><><><><><><><><><><><><"
-
-# Ensure that PVC dirs and subdirs exist and have the proper
-# ownership (SOFTWARE-4423)
-pvc_dirs=(/var/log/condor-ce/gratia
-          /var/lib/condor-ce/execute
-          /var/lib/condor-ce/gratia/data/
-          /var/lib/condor-ce/gratia/tmp/
-          /var/lib/condor-ce/spool/ceview/metrics
-          /var/lib/condor-ce/spool/ceview/vos)
-mkdir -p ${pvc_dirs[*]}
-
-pvc_dirs+=(/var/log/condor-ce
-           /var/lib/condor-ce
-           /var/lib/condor-ce/spool
-           /var/lib/condor-ce/spool/ceview)
-chown condor:condor ${pvc_dirs[*]}
 
 [[ ${HOSTED_CE_CONTINUE_ON_ERROR} == 'true' ]] || set +e
 
