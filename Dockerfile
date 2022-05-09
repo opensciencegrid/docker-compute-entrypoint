@@ -18,7 +18,7 @@ RUN groupadd -g 64 -r condor && \
     useradd -r -g condor -d /var/lib/condor -s /sbin/nologin \
       -u 64 -c "Owner of HTCondor Daemons" condor
 
-RUN yum install -y osg-ce-bosco \
+RUN yum install -y osg-ce \
                    # FIXME: avoid htcondor-ce-collector conflict
                    htcondor-ce \
                    htcondor-ce-view \
