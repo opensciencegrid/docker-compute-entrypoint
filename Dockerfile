@@ -21,7 +21,6 @@ RUN groupadd -g 64 -r condor && \
 RUN yum install -y osg-ce \
                    # FIXME: avoid htcondor-ce-collector conflict
                    htcondor-ce \
-                   htcondor-ce-view \
                    git \
                    openssh-clients \
                    sudo \
@@ -51,7 +50,8 @@ ARG BASE_YUM_REPO=release
 LABEL maintainer "OSG Software <help@opensciencegrid.org>"
 LABEL name "osg-ce-condor"
 
-RUN yum install -y osg-ce-condor && \
+RUN yum install -y osg-ce-condor \
+                   htcondor-ce-view && \
     yum clean all && \
     rm -rf /var/cache/yum/
 
