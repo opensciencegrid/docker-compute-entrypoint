@@ -85,7 +85,7 @@ COPY hosted-ce/overrides/ssh_q.patch /tmp
 COPY hosted-ce/overrides/bosco_cluster_xtrace.patch /tmp
 
 # Handle bosco_cluster -> condor_remote_cluster symlink
-RUN [[ $BASE_OSG_SERIES == "3.5" ]] || sed -i 's/bosco_cluster/condor_remote_cluster/g' /tmp/*.patch && \
+RUN sed -i 's/bosco_cluster/condor_remote_cluster/g' /tmp/*.patch && \
     patch -d / -p0 < /tmp/ssh_q.patch && \
     patch -d / -p0 < /tmp/bosco_cluster_xtrace.patch
 
