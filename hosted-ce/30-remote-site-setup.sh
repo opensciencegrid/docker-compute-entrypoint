@@ -9,6 +9,8 @@ else
     olde=+e
 fi
 
+source ce-common-startup
+
 [[ ${HOSTED_CE_CONTINUE_ON_ERROR:=false} == 'true' ]] || set -e
 
 BOSCO_KEY=/etc/osg/bosco.key
@@ -148,9 +150,7 @@ if [[ -n $BOSCO_GIT_ENDPOINT && -n $BOSCO_DIRECTORY ]]; then
 fi
 unset GIT_SSH_COMMAND
 
-users=$(cat /etc/grid-security/grid-mapfile /etc/grid-security/voms-mapfile | \
-            awk '/^"[^"]+" +[a-zA-Z0-9\-\._]+$/ {print $NF}' | \
-            sort -u)
+users=$(get_mapped_users)
 [[ -n $users ]] || errexit "Did not find any user mappings in the VOMS or Grid mapfiles"
 
 # Allow the condor user to run the WN client updater as the local users
