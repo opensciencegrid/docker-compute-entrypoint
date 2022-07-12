@@ -201,7 +201,7 @@ test_remote_forward_once () {
     # port 22, since we are not testing a reverse ssh connection--just the
     # port forward itself.
     local port=$(( RANDOM % 60000 + 1024 ))
-    ssh "$1@$2" -o ExitOnForwardFailure=1 -R $port:localhost:22 true
+    ssh "$1@$2" -o ExitOnForwardFailure=yes -R $port:localhost:22 true
 }
 
 test_remote_forward () {
