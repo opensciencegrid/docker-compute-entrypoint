@@ -6,8 +6,6 @@ function get_mapped_users () {
     {
         awk '$1 == "SCITOKENS" { print $NF }' /etc/condor-ce/condor_mapfile \
             /etc/condor-ce/mapfiles.d/* 2>/dev/null
-        cat /etc/grid-security/grid-mapfile /etc/grid-security/voms-mapfile |
-            awk '/^"[^"]+" +[a-zA-Z0-9\-\._]+$/ {print $NF}'
     } | sort -u
 }
 

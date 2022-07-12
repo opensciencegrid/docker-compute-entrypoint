@@ -151,7 +151,7 @@ fi
 unset GIT_SSH_COMMAND
 
 users=$(get_mapped_users)
-[[ -n $users ]] || errexit "Did not find any user mappings in the VOMS or Grid mapfiles"
+[[ -n $users ]] || errexit "Did not find any HTCondor-CE SCITOKENS user mappings"
 
 # Allow the condor user to run the WN client updater as the local users
 CONDOR_SUDO_FILE=/etc/sudoers.d/10-condor-ssh
