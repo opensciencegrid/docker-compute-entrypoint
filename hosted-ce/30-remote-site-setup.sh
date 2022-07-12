@@ -9,7 +9,7 @@ else
     olde=+e
 fi
 
-source ce-common-startup
+source $(realpath "$0" | xargs dirname)/ce-common-startup
 
 [[ ${HOSTED_CE_CONTINUE_ON_ERROR:=false} == 'true' ]] || set -e
 
