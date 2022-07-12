@@ -9,7 +9,7 @@ else
     olde=+e
 fi
 
-source "$(dirname "$(realpath "$0")")/ce-common-startup"
+source /etc/osg/image-init.d/ce-common-startup
 
 [[ ${HOSTED_CE_CONTINUE_ON_ERROR:=false} == 'true' ]] || set -e
 
