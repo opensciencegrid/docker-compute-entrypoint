@@ -209,7 +209,7 @@ test_remote_forward () {
     # unlucky and hit a remote port that is in use (being listened on),
     # but we'd have to be extremely unlucky for this to happen thrice
     retries=0
-    until test_remote_forward_once; do
+    until test_remote_forward_once "$1" "$2"; do
         (( ++retries < 3 )) || return 1
     done
 }
