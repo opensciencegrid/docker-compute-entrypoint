@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. /etc/osg/image-config.d/ce-common-startup
+source "$(dirname "$(realpath "$0")")/ce-common-startup"
 
 set -x
 
