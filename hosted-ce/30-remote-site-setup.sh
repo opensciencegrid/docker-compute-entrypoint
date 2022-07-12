@@ -190,8 +190,40 @@ done
 # REMOTE COMMANDS #
 ###################
 
+test_remote_connect () {
+    ssh "$1@$2" true
+}
+
+test_remote_forward_once () {
+    # pick a random unprivileged port for remote side; test that a remote
+    # port forward back to the local side works.  For the purpose of this
+    # test, it doesn't actually matter whether sshd is running locally on
+    # port 22, since we are not testing a reverse ssh connection--just the
+    # port forward itself.
+    local port=$(( RANDOM % 60000 + 1024 ))
+    ssh "$1@$2" -o ExitOnForwardFailure=1 -R $port:localhost:22 true
+}
+
+test_remote_forward () {
+    # try remote forward with a random port a few times ... we might get
+    # unlucky and hit a remote port that is in use (being listened on),
+    # but we'd have to be extremely unlucky for this to happen thrice
+    retries=0
+    until test_remote_forward_once; do
+        (( ++retries < 3 )) || return 1
+    done
+}
+
 # We have to pick a user for SSH, may as well be the first one
-remote_os_info=$(fetch_remote_os_info "$(printf "%s\n" $users | head -n1)" "$remote_fqdn")
+first_user=$(printf "%s\n" $users | head -n1)
+
+test_remote_connect "$first_user" "$remote_fqdn" ||
+    errexit "remote ssh connection to $remote_fqdn:$remote_port failed"
+
+test_remote_forward "$first_user" "$remote_fqdn" ||
+    errexit "remote ssh forward from $remote_fqdn failed"
+
+remote_os_info=$(fetch_remote_os_info "$first_user" "$remote_fqdn")
 remote_os_ver=$(echo "$remote_os_info" | awk -F '=' '/^VERSION_ID/ {print $2}' | tr -d '"')
 
 # Skip WN client installation for non-RHEL-based remote clusters
