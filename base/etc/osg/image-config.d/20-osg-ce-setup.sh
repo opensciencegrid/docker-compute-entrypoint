@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source $(realpath "$0" | xargs dirname)/ce-common-startup
+source "$(dirname "$(realpath "$0")")/ce-common-startup"
 
 set -x
 
