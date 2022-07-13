@@ -17,6 +17,7 @@ pvc_dirs=(/var/log/condor-ce/gratia
 mkdir -p ${pvc_dirs[*]}
 
 pvc_dirs+=(/var/log/condor-ce
+           /var/log/condor-ce/user
            /var/lib/condor-ce
            /var/lib/condor-ce/spool
            /var/lib/condor-ce/spool/ceview)
