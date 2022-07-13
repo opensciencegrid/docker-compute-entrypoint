@@ -16,11 +16,14 @@ pvc_dirs=(/var/log/condor-ce/gratia
           /var/lib/condor-ce/spool/ceview/vos)
 mkdir -p ${pvc_dirs[*]}
 
+user_log_dir=/var/log/condor-ce/user
 pvc_dirs+=(/var/log/condor-ce
+           $user_log_dir
            /var/lib/condor-ce
            /var/lib/condor-ce/spool
            /var/lib/condor-ce/spool/ceview)
 chown condor:condor ${pvc_dirs[*]}
+chmod 1777 $user_log_dir
 
 users=$(get_mapped_users)
 for user in $users; do
