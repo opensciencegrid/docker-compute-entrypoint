@@ -8,7 +8,9 @@ set -x
 
 # Ensure that PVC dirs and subdirs exist and have the proper
 # ownership (SOFTWARE-4423)
+user_log_dir=/var/log/condor-ce/user
 pvc_dirs=(/var/log/condor-ce/gratia
+           $user_log_dir
           /var/lib/condor-ce/execute
           /var/lib/condor-ce/gratia/data/
           /var/lib/condor-ce/gratia/tmp/
@@ -16,9 +18,7 @@ pvc_dirs=(/var/log/condor-ce/gratia
           /var/lib/condor-ce/spool/ceview/vos)
 mkdir -p ${pvc_dirs[*]}
 
-user_log_dir=/var/log/condor-ce/user
 pvc_dirs+=(/var/log/condor-ce
-           $user_log_dir
            /var/lib/condor-ce
            /var/lib/condor-ce/spool
            /var/lib/condor-ce/spool/ceview)
