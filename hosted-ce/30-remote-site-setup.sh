@@ -22,6 +22,10 @@ SKIP_WN_INSTALL=no
 
 function errexit {
     echo "$1" >&2
+    if [[ ${HOSTED_CE_CONTINUE_ON_ERROR:-false} == 'true' ]]; then
+        echo "errexit at $(date +'%F %T'); sleeping for 30 minutes to let you debug." >&2
+        sleep $(( 60 * 30 ))
+    fi
     exit 1
 }
 
