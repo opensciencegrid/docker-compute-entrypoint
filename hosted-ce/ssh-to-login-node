@@ -6,6 +6,6 @@ if [[ $(id -u) == 0 ]]; then
 else
     user=$(id -un)
 fi
-users_ssh_config=/home/$user/.ssh/config
-login_host=$(awk '/^Host/ {print $2; exit}' "$users_ssh_config")
-exec ssh -l "$user" -F "$users_ssh_config" "$login_host" "$@"
+global_ssh_config=/etc/ssh/ssh_config
+login_host=$(awk "/^Match user \"$user\"/ {print \$5; exit}" "$global_ssh_config" | tr -d '""')
+exec ssh -l "$user" -F "$global_ssh_config" "$login_host" "$@"
