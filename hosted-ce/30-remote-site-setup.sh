@@ -73,7 +73,7 @@ setup_user_ssh () {
 
   # Write user/host stanza to the global SSH config
   cat <<EOF >> /etc/ssh/ssh_config
-Match user "$remote_user" host "$remote_fqdn"
+Match user "$remote_user"
   IdentityFile $ssh_key
   ${extra_config}
 
@@ -183,8 +183,10 @@ EOF
 
 # Set up the necessary SSH config for each mapped user
 for ruser in $users; do
+    # Create new stanza for jump hosts
     if [[ -n $SSH_PROXY_JUMP ]]; then
-        extra_ssh_config="ProxyJump $ruser@$SSH_PROXY_JUMP"
+        extra_ssh_config="Match user \"$ruser\" host \"$remote_fqdn\"
+ProxyJump $ruser@$SSH_PROXY_JUMP"
     fi
     setup_user_ssh "$ruser" "$remote_fqdn" "$remote_port" "$extra_ssh_config"
 done
