@@ -44,20 +44,22 @@ function fetch_remote_os_info {
     ssh -q "$ruser@$rhost" "cat /etc/os-release"
 }
 
-setup_ssh_config () {
-  extra_config="$1"
-  echo "Setting up SSH for user ${ruser}"
-  ssh_dir=$(eval echo "~${ruser}/.ssh")
+setup_user_ssh () {
+  remote_user="$1"
+  remote_fqdn="$2"
+  remote_port="$3"
+  extra_config="$4"
+
+  echo "Setting up SSH for user ${remote_user}"
+  ssh_dir=$(eval echo "~${remote_user}/.ssh")
   # setup user and SSH dir
   mkdir -p $ssh_dir
-  chown "${ruser}": $ssh_dir
   chmod 700 $ssh_dir
 
   # copy Bosco key
   ssh_key=$ssh_dir/id_rsa
   cp $BOSCO_KEY $ssh_key
   chmod 600 $ssh_key
-  chown "${ruser}": $ssh_key
   # HACK: Symlink the Bosco key to the location expected by
   # bosco_cluster so it doesn't go and try to generate a new one
   ln -s $ssh_key $ssh_dir/bosco_key.rsa
@@ -67,32 +69,21 @@ setup_ssh_config () {
       ssh_cert=${ssh_key}-cert.pub
       cp $BOSCO_CERT $ssh_cert
       chmod 600 $ssh_cert
-      chown "${ruser}": $ssh_cert
   fi
 
-  ssh_config=$ssh_dir/config
-  cat <<EOF > "$ssh_config"
-Host $remote_fqdn
-  Port $remote_port
-  IdentityFile ${ssh_key}
-  IdentitiesOnly yes
+  # Write user/host stanza to the global SSH config
+  cat <<EOF >> /etc/ssh/ssh_config
+Match user "$remote_user"
+  IdentityFile $ssh_key
   ${extra_config}
+
 EOF
-  debug_file_contents "$ssh_config"
 
-  # setup known hosts
-  known_hosts=$ssh_dir/known_hosts
-  echo "$REMOTE_HOST_KEY" >> "$known_hosts"
-  debug_file_contents $known_hosts
-
-  for ssh_file in $ssh_dir/config $ssh_dir/known_hosts; do
-      chown "${ruser}": "$ssh_file"
-  done
+  chown -R "${ruser}": "$ssh_dir"
 
   # debugging
   ls -l "$ssh_dir"
 }
-
 
 # Install the WN client, CAs, and CRLs on the remote host
 # Store logs in /var/log/condor-ce/ to simplify serving logs via Kubernetes
@@ -132,20 +123,10 @@ else
 fi
 [[ -n $REMOTE_HOST_KEY ]] || errexit "Failed to determine host key for $remote_fqdn:$remote_port"
 
-extra_user_ssh_config=""
-extra_root_ssh_config="ControlMaster auto
-  ControlPath /tmp/cm-%i-%r@%h:%p
-  ControlPersist  15m
-"
-
-if [[ -n $SSH_PROXY_JUMP ]]; then
-    proxyjump_config="ProxyJump $SSH_PROXY_JUMP"
-    extra_root_ssh_config+="  $proxyjump_config"
-    extra_user_ssh_config+=$proxyjump_config
-fi
-
-ruser=root
-setup_ssh_config "$extra_root_ssh_config"
+# setup global known hosts
+known_hosts=/etc/ssh/ssh_known_hosts
+echo "$REMOTE_HOST_KEY" >> "$known_hosts"
+debug_file_contents $known_hosts
 
 # Populate the bosco override dir from a Git repo
 if [[ -n $BOSCO_GIT_ENDPOINT && -n $BOSCO_DIRECTORY ]]; then
@@ -186,8 +167,28 @@ fi
 # Add the ability for admins to override the default Bosco tarball URL (SOFTWARE-4537)
 [[ $BOSCO_TARBALL_URL ]] && bosco_cluster_opts+=(--url "$BOSCO_TARBALL_URL")
 
+# Set up a control master for each rootly SSH connection
+cat <<EOF >> /etc/ssh/ssh_config
+
+Host $remote_fqdn
+  Port $remote_port
+  IdentitiesOnly yes
+
+Match localuser root
+  ControlMaster auto
+  ControlPath /tmp/cm-%i-%r@%h:%p
+  ControlPersist  15m
+
+EOF
+
+# Set up the necessary SSH config for each mapped user
 for ruser in $users; do
-    setup_ssh_config "$extra_user_ssh_config"
+    # Create new stanza for jump hosts
+    if [[ -n $SSH_PROXY_JUMP ]]; then
+        extra_ssh_config="Match user \"$ruser\" host \"$remote_fqdn\"
+ProxyJump $ruser@$SSH_PROXY_JUMP"
+    fi
+    setup_user_ssh "$ruser" "$remote_fqdn" "$remote_port" "$extra_ssh_config"
 done
 
 ###################
@@ -195,7 +196,7 @@ done
 ###################
 
 test_remote_connect () {
-    ssh "$1@$2" true
+    ssh -vvv "$1@$2" true
 }
 
 test_remote_forward_once () {
@@ -205,7 +206,7 @@ test_remote_forward_once () {
     # port 22, since we are not testing a reverse ssh connection--just the
     # port forward itself.
     local port=$(( RANDOM % 60000 + 1024 ))
-    ssh "$1@$2" -o ExitOnForwardFailure=yes -R $port:localhost:22 true
+    ssh -vvv "$1@$2" -o ExitOnForwardFailure=yes -R $port:localhost:22 true
 }
 
 test_remote_forward () {
