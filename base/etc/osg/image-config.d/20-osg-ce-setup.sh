@@ -37,14 +37,14 @@ if [[ $? -eq 0 ]]; then
   cp /tmp/90-local.ini /etc/osg/config.d/90-local.ini
 fi
 
-echo "Trying to populate hostname in 99-local.ini with a better value.."
+echo "Trying to populate hostname in 90-local.ini with a better value.."
 pushd /etc/osg/config.d
   if [[ -z "$_CONDOR_NETWORK_HOSTNAME" ]]; then
     echo '$_CONDOR_NETWORK_HOSTNAME is empty, just using `hostname`'
     sed -i "s/localhost/$(hostname)/" 90-local.ini
   else
     echo '$_CONDOR_NETWORK_HOSTNAME is nonempty, substituting it in..'
-    sed -i "s/localhost/$_CONDOR_NETWORK_HOSTNAME/" 99-local.ini
+    sed -i "s/localhost/$_CONDOR_NETWORK_HOSTNAME/" 90-local.ini
   fi
 popd 
 
