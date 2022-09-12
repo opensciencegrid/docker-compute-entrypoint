@@ -7,5 +7,5 @@ else
     user=$(id -un)
 fi
 global_ssh_config=/etc/ssh/ssh_config
-login_host=$(awk "/^Match user \"$user\"/ {print \$5; exit}" "$global_ssh_config" | tr -d '""')
+login_host=$(awk "/^Host.*\# remote login host/ {print \$2; exit}" "$global_ssh_config" | tr -d '""')
 exec ssh -l "$user" -F "$global_ssh_config" "$login_host" "$@"
