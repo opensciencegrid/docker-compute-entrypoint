@@ -155,7 +155,7 @@ def rsync_upload(local_dir, remote_user, remote_host, remote_dir, ssh_key=None):
     except OSError as e:
         raise Error(errstr + str(e))
     output, _ = proc.communicate()
-    output = output.decode()
+    output = output.decode("latin-1")
     if proc.returncode != 0:
         log.error(output)
         raise Error(errstr + "rsync exited with %d" % proc.returncode)
