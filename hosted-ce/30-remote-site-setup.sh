@@ -168,9 +168,10 @@ fi
 [[ $BOSCO_TARBALL_URL ]] && bosco_cluster_opts+=(--url "$BOSCO_TARBALL_URL")
 
 # Set up a control master for each rootly SSH connection
+# Add a sentinel to simplify awk in ssh-to-login-node
 cat <<EOF >> /etc/ssh/ssh_config
 
-Host $remote_fqdn
+Host $remote_fqdn # remote login host
   Port $remote_port
   IdentitiesOnly yes
 
