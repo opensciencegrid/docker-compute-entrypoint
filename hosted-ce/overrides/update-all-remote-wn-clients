@@ -114,9 +114,12 @@ def call_updater(cfg, section, updater_script, log_dir, dry_run=False):
     log_file_path = os.path.join(log_dir, endpoint)
     with open(log_file_path, "ab") as log_file:
         log_file.write(b"-" * 79 + b"\n")
+        now = datetime.datetime.now()
         log_file.write(
             b"Started at %s\nUser: %s\nCommand: %r\n\n"
-            % (datetime.datetime.now(), local_user, cmd)
+            % (now.strftime("%F %T").encode('latin-1'),
+               local_user.encode('latin-1'),
+               cmd)
         )
         log_file.flush()
         proc = Popen(
