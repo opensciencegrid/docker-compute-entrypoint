@@ -60,7 +60,7 @@ jobs:
         pull: True
         load: True
         tags: base:latest
-        target: base
+        
     
     - name: Generate tag list
       id: generate-tag-list

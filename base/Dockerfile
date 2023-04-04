@@ -6,7 +6,7 @@
 ARG BASE_YUM_REPO=release
 ARG BASE_OSG_SERIES=3.6
 
-FROM opensciencegrid/software-base:$BASE_OSG_SERIES-el7-$BASE_YUM_REPO AS base
+FROM opensciencegrid/software-base:$BASE_OSG_SERIES-el7-$BASE_YUM_REPO
 LABEL maintainer "OSG Software <help@opensciencegrid.org>"
 
 # previous args have gone out of scope
