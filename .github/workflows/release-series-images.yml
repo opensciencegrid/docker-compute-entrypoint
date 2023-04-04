@@ -3,7 +3,7 @@ name: Build release series tagged container images
 on:
   push:
     branches:
-      - software-5488-moving-dockerfiles
+      - master
   pull_request:
   repository_dispatch:
     types:
