@@ -20,8 +20,7 @@ jobs:
       id: mkdatetag
       run: echo "::set-output name=dtag::$(date +%Y%m%d-%H%M)"
 
-  build-images:
-    name: compute-entrypoint:${{ matrix.osg_series }}-${{ matrix.repo }} image build
+  image-builds:
     runs-on: ubuntu-latest
     needs: [make-date-tag]
     strategy:
