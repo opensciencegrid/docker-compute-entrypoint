@@ -1,4 +1,4 @@
-FROM base:latest AS osg-ce-condor
+FROM base:latest
 ARG BASE_YUM_REPO=release
 LABEL maintainer "OSG Software <help@opensciencegrid.org>"
 LABEL name "osg-ce-condor"

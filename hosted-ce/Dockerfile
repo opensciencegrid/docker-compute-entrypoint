@@ -2,7 +2,7 @@
 # hosted-ce #
 #############
 
-FROM base:latest AS hosted-ce
+FROM base:latest
 LABEL maintainer "OSG Software <help@opensciencegrid.org>"
 LABEL name "hosted-ce"
 
