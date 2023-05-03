@@ -42,6 +42,12 @@ COPY etc/condor-ce/config.d/* /usr/share/condor-ce/config.d/
 COPY usr/local/bin/* /usr/local/bin/
 COPY etc/supervisord.d/* /etc/supervisord.d/
 
+# Create the dir for CE-generated IDTOKENS used by glideins
+# to advertise back to the CE collector (SOFTWARE-5556)
+RUN CE_IDTOKEN_DIR=/usr/share/condor-ce/glidein-tokens; \
+    mkdir -p "$CE_IDTOKEN_DIR" \
+    && chown condor: "$CE_IDTOKEN_DIR"
+
 # do the bad thing of overwriting the existing cron job for fetch-crl
 COPY etc/cron.d/fetch-crl /etc/cron.d/fetch-crl
 RUN chmod 644 /etc/cron.d/fetch-crl
