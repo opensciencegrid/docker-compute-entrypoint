@@ -18,9 +18,12 @@ RUN groupadd -g 64 -r condor && \
     useradd -r -g condor -d /var/lib/condor -s /sbin/nologin \
       -u 64 -c "Owner of HTCondor Daemons" condor
 
-# FIXME: backversion to avoid SetEffectiveOwner bug
-RUN yum install -y --enablerepo=osg-upcoming condor-9.12.0
-RUN yum install -y osg-ce \
+# FIXME: backversion HTCondor in release images to avoid SetEffectiveOwner bug
+# (10.4.2 in dev/testing ostensibly fixes this issue)
+RUN if [[ $BASE_YUM_REPO == 'release' ]]; then \
+        yum install -y --enablerepo=osg-upcoming condor-9.12.0; \
+    fi && \
+    yum install -y osg-ce \
                    # FIXME: avoid htcondor-ce-collector conflict
                    htcondor-ce \
                    git \
