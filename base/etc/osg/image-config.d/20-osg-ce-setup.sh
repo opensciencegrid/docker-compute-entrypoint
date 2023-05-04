@@ -32,6 +32,7 @@ for user in $users; do
     adduser --base-dir /home/ "$user"
     # Create the per-user dir for CE-generated IDTOKENs (SOFTWARE-5556)
     mkdir "$ce_idtoken_dir"
+    chmod 700 "$ce_idtoken_dir"
     chown "$user": "$ce_idtoken_dir"
 done
 
