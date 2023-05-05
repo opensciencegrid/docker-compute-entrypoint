@@ -21,7 +21,7 @@ RUN groupadd -g 64 -r condor && \
 # FIXME: Make sure that we have 10.4.2 installed with
 # JobRouter and condor remote submit bug fixes
 RUN if [[ $BASE_YUM_REPO == 'release' ]]; then \
-        yum install -y --enablerepo=osg-upcoming-testing condor; \
+        yum install -y --enablerepo=osg-upcoming-testing 'condor >= 10.4.2'; \
     fi && \
     yum install -y osg-ce \
                    # FIXME: avoid htcondor-ce-collector conflict
