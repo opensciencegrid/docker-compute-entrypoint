@@ -25,10 +25,15 @@ pvc_dirs+=(/var/log/condor-ce
 chown condor:condor ${pvc_dirs[*]}
 chmod 1777 $user_log_dir
 
+ce_idtoken_dir=/usr/share/condor-ce/glidein-tokens
 users=$(get_mapped_users)
 for user in $users; do
     echo "Creating local user ($user)..."
     adduser --base-dir /home/ "$user"
+    # Create the per-user dir for CE-generated IDTOKENs (SOFTWARE-5556)
+    mkdir "$ce_idtoken_dir"
+    chmod 700 "$ce_idtoken_dir"
+    chown "$user": "$ce_idtoken_dir"
 done
 
 #kubernetes configmaps arent writeable
