@@ -31,9 +31,10 @@ for user in $users; do
     echo "Creating local user ($user)..."
     adduser --base-dir /home/ "$user"
     # Create the per-user dir for CE-generated IDTOKENs (SOFTWARE-5556)
-    mkdir -p "$ce_idtoken_dir"
-    chmod 700 "$ce_idtoken_dir"
-    chown "$user": "$ce_idtoken_dir"
+    user_idtoken_dir=$ce_idtoken_dir/$user
+    mkdir -p "$user_idtoken_dir"
+    chmod 700 "$user_idtoken_dir"
+    chown "$user": "$user_idtoken_dir"
 done
 
 #kubernetes configmaps arent writeable
