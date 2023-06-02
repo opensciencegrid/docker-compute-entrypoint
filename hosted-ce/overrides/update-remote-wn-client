@@ -26,9 +26,9 @@ import subprocess
 from subprocess import CalledProcessError, Popen, PIPE, STDOUT
 import sys
 import tempfile
-
-# noinspection PyUnresolvedReferences
-from six.moves import shlex_quote, urllib
+import urllib
+import urllib.request, urllib.error
+from shlex import quote
 
 
 OSG_CA_SCRIPTS_REPO = "https://github.com/opensciencegrid/osg-ca-scripts"
@@ -149,7 +149,7 @@ def rsync_upload(local_dir, remote_user, remote_host, remote_dir, ssh_key=None):
     errstr = "Error rsyncing to remote host %s:%s: " % (remote_host, remote_dir)
     try:
         proc = Popen(
-            ssh + [remote_host, "[[ -e %s ]] || echo missing" % shlex_quote(remote_dir)],
+            ssh + [remote_host, "[[ -e %s ]] || echo missing" % quote(remote_dir)],
             stdout=PIPE,
         )
     except OSError as e:
@@ -189,7 +189,7 @@ def rsync_upload(local_dir, remote_user, remote_host, remote_dir, ssh_key=None):
              "rm -rf {0} && "
              "mv {1} {0} && "
              "mv {2} {1}".format(
-                shlex_quote(olddir), shlex_quote(remote_dir), shlex_quote(newdir))])
+                quote(olddir), quote(remote_dir), quote(newdir))])
     except (OSError, CalledProcessError) as e:
         raise Error("Error renaming remote directories: %s" % e)
 
