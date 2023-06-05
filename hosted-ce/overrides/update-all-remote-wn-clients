@@ -9,8 +9,7 @@ import re
 from subprocess import Popen, STDOUT
 import sys
 
-# noinspection PyUnresolvedReferences
-from six.moves import configparser
+import configparser
 
 
 CONFIG_PATH = "/etc/endpoints.ini"
