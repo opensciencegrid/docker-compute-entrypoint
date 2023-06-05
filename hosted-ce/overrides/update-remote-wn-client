@@ -26,7 +26,6 @@ import subprocess
 from subprocess import CalledProcessError, Popen, PIPE, STDOUT
 import sys
 import tempfile
-import urllib
 import urllib.request, urllib.error
 from shlex import quote
 
