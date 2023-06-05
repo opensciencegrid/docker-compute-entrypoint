@@ -9,7 +9,6 @@ import re
 from subprocess import Popen, STDOUT
 import sys
 
-# noinspection PyUnresolvedReferences
 import configparser
 
 
