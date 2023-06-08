@@ -101,7 +101,7 @@ def update_crls(cert_dir):
     proc = Popen(command, stdout=PIPE, stderr=STDOUT)
     output, _ = proc.communicate()
     if proc.returncode != 0:
-        if output and ("CRL verification failed" in output or "Download error" in output):
+        if output and (b"CRL verification failed" in output or b"Download error" in output):
             # These errors aren't actually fatal; we'll send a less alarming
             # notification about them.
             log.info(output)

@@ -174,7 +174,7 @@ def main():
     )
     opts, _ = parser.parse_args()
 
-    cfg = configparser.SafeConfigParser()
+    cfg = configparser.ConfigParser()
     cfg.read(opts.config)
 
     sections_list = list(x for x in cfg.sections() if x.startswith("Endpoint"))
