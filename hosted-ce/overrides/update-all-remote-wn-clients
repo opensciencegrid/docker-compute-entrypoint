@@ -122,7 +122,7 @@ def call_updater(cfg, section, updater_script, log_dir, dry_run=False):
         )
         log_file.flush()
         proc = Popen(
-            ["sudo", "-n", "-H", "-u", local_user] + timeout_cmd + cmd,
+            timeout_cmd + ["sudo", "-n", "-H", "-u", local_user] + cmd,
             stdout=log_file,
             stderr=STDOUT,
             cwd="/",
