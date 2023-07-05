@@ -121,6 +121,11 @@ def call_updater(cfg, section, updater_script, log_dir, dry_run=False):
                cmd)
         )
         log_file.flush()
+        # while it's advantageous to have the timeout be closer to the process
+        # you're running, we have to use "timeout sudo" here instead of
+        # "sudo timeout" so we don't have to list the "timeout" command in the
+        # sudoers file.  If you have timeout in the sudoers, you might as
+        # well have ALL since timeout lets you run any other command...
         proc = Popen(
             timeout_cmd + ["sudo", "-n", "-H", "-u", local_user] + cmd,
             stdout=log_file,
