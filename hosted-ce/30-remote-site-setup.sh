@@ -141,7 +141,7 @@ users=$(get_mapped_users)
 # Allow the condor user to run the WN client updater as the local users
 CONDOR_SUDO_FILE=/etc/sudoers.d/10-condor-ssh
 condor_sudo_users=`tr ' ' ',' <<< $users`
-echo "condor ALL = ($condor_sudo_users) NOPASSWD: /usr/bin/update-remote-wn-client" \
+echo "condor ALL = ($condor_sudo_users) NOPASSWD: /usr/bin/update-remote-wn-client-override" \
       > $CONDOR_SUDO_FILE
 chmod 644 $CONDOR_SUDO_FILE
 
@@ -253,7 +253,7 @@ done
 
 if [[ $SKIP_WN_INSTALL == 'no' ]]; then
     echo "Installing remote WN client tarballs..."
-    sudo -u condor update-all-remote-wn-clients --log-dir /var/log/condor-ce/
+    sudo -u condor update-all-remote-wn-clients-override --log-dir /var/log/condor-ce/
 else
     echo "SKIP_WNCLIENT = True" > /etc/condor-ce/config.d/50-skip-wnclient-cron.conf
     echo "Skipping remote WN client tarball installation, using CVMFS..."

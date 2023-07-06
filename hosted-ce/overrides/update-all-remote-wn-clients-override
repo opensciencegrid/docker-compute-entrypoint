@@ -194,12 +194,12 @@ def main():
         log.error(e)
         return 1
 
-    updater_script = which("update-remote-wn-client")
+    updater_script = which("update-remote-wn-client-override")
     if not updater_script:
-        msg = "update-remote-wn-client not found in PATH"
+        msg = "update-remote-wn-client-override not found in PATH"
         if opts.dry_run:
             log.warning(msg)
-            updater_script = "update-remote-wn-client"
+            updater_script = "update-remote-wn-client-override"
         else:
             log.error(msg)
             return 1
