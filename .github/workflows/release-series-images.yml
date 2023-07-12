@@ -18,7 +18,7 @@ jobs:
     steps:
     - name: make date tag
       id: mkdatetag
-      run: echo "::set-output name=dtag::$(date +%Y%m%d-%H%M)"
+      run: echo "dtag=$(date +%Y%m%d-%H%M)" >> $GITHUB_OUTPUT
 
   image-builds:
     runs-on: ubuntu-latest
@@ -31,17 +31,17 @@ jobs:
         osg_series: ['3.6']
     steps:
 
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Log in to Docker Hub
-      uses: docker/login-action@v1
+      uses: docker/login-action@v2.2.0
       if: github.event_name != 'pull_request' && startsWith(github.repository, 'opensciencegrid/')
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
     - name: Log in to OSG Harbor
-      uses: docker/login-action@v1
+      uses: docker/login-action@v2.2.0
       if: github.event_name != 'pull_request' && startsWith(github.repository, 'opensciencegrid/')
       with:
         registry: hub.opensciencegrid.org
@@ -49,7 +49,7 @@ jobs:
         password: ${{ secrets.OSG_HARBOR_ROBOT_PASSWORD }}
 
     - name: Build Base Docker image
-      uses: docker/build-push-action@v2.2.2
+      uses: docker/build-push-action@v4
       with:
         build-args: |
           BASE_YUM_REPO=${{ matrix.repo }}
@@ -76,16 +76,16 @@ jobs:
         # This causes the tag_list array to be comma-separated below,
         # which is required for build-push-action
         IFS=,
-        echo "::set-output name=taglist::${tag_list[*]}"
+        echo "taglist=${tag_list[*]}" >> $GITHUB_OUTPUT
 
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v1
+      uses: docker/setup-buildx-action@v2.7.0
       with:
         driver: docker  # If not set to docker driver, it will default to docker-container
                         # when using load for the build-push-action.
     
     - name: Build and push hosted-ce and osg-ce-condor images
-      uses: docker/build-push-action@v2.2.2
+      uses: docker/build-push-action@v4
       with:
         push: ${{ github.event_name != 'pull_request' && startsWith(github.repository, 'opensciencegrid/') }}
         context: ${{matrix.image}}
