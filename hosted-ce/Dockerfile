@@ -25,7 +25,7 @@ COPY overrides/bosco_cluster_xtrace.patch /tmp
 
 # SOFTWARE-5613: override package versions of remote WN client scripts
 # to allow for a faster dev -> ops turnaround
-COPY overrides/update-*-remote-wn-client*-override /usr/local/sbin
+COPY overrides/update-*-remote-wn-client*-override /usr/local/bin
 
 # Handle bosco_cluster -> condor_remote_cluster symlink
 RUN sed -i 's/bosco_cluster/condor_remote_cluster/g' /tmp/*.patch && \
