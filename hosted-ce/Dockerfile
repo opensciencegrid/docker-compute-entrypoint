@@ -13,10 +13,6 @@ RUN yum install -y osg-ce-bosco && \
 
 COPY 30-remote-site-setup.sh /etc/osg/image-config.d/
 
-# SOFTWARE-5613: ensure that /usr/local/{s,}bin is included in all
-# user's paths
-COPY etc/* /etc
-
 # HACK: override condor_ce_jobmetrics from SOFTWARE-4183 until it is released in
 # HTCondor-CE.
 COPY overrides/condor_ce_jobmetrics /usr/share/condor-ce/condor_ce_jobmetrics
