@@ -14,10 +14,6 @@ RUN yum install -y osg-ce-bosco \
 
 COPY etc/osg/image-config.d/ /etc/osg/image-config.d/
 
-# HACK: override condor_ce_jobmetrics from SOFTWARE-4183 until it is released in
-# HTCondor-CE.
-COPY usr/share/condor-ce/ /usr/share/condor-ce/
-
 # Use "ssh -q" in bosco_cluster until the chang has been upstreamed to condor
 # Enable bosco_cluster xtrace
 COPY tmp/ /tmp
