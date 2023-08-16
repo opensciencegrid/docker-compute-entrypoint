@@ -131,7 +131,7 @@ debug_file_contents $known_hosts
 # SOFTWARE-5650: the htcondor-ce-view package drops config to
 # automatically enable it.  Disable it by default at runtime.
 # Not all of these configs are marked as such in the RPM.
-if [[ ${ENABLE_CE_VIEW:=false} == 'true' ]]; then
+if [[ ${ENABLE_CE_VIEW:=false} != 'true' ]]; then
     rpm -ql htcondor-ce-view \
         | egrep '(/etc|/usr/share)/condor-ce/config\.d/.*\.conf$' \
         | xargs rm
