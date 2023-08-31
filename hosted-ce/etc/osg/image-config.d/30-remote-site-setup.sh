@@ -94,10 +94,7 @@ setup_endpoints_ini () {
     # configuration and remote copy. We need the absolute path
     # specifically for fetch-crl
     remote_home_dir=$(ssh -q "${ruser}@$remote_fqdn" pwd)
-    osg_ver=3.4
-    if [[ $remote_os_major_ver -gt 6 ]]; then
-        osg_ver=3.5
-    fi
+    osg_ver=3.6
     cat <<EOF >> $ENDPOINT_CONFIG
 [Endpoint ${RESOURCE_NAME}-${ruser}]
 local_user = ${ruser}
