@@ -28,7 +28,16 @@ jobs:
       matrix:
         repo: ['development', 'testing', 'release']
         image: ['hosted-ce', 'osg-ce-condor']
-        osg_series: ['3.6']
+        osg_series:
+          - name: '3.6'
+            os: 'el7'
+          - name: '23'
+            os: 'el9'
+        exclude:
+          - repo: 'testing'
+            osg_series: {name: '23', os: 'el9'}
+          - repo: 'release'
+            osg_series: {name: '23', os: 'el9'}
     steps:
 
     - uses: actions/checkout@v3
@@ -53,7 +62,8 @@ jobs:
       with:
         build-args: |
           BASE_YUM_REPO=${{ matrix.repo }}
-          BASE_OSG_SERIES=${{ matrix.osg_series }}
+          BASE_OSG_SERIES=${{ matrix.osg_series.name }}
+          BASE_OS=${{ matrix.osg_series.os }}
         context: ./base
         pull: True
         load: True
@@ -63,7 +73,7 @@ jobs:
       env:
         REPO: ${{ matrix.repo }}
         IMAGE: ${{ matrix.image }}
-        OSG_SERIES: ${{ matrix.osg_series }}
+        OSG_SERIES: ${{ matrix.osg_series.name }}
         TIMESTAMP: ${{ needs.make-date-tag.outputs.dtag }}
       run: |
         docker_repo=opensciencegrid/$IMAGE

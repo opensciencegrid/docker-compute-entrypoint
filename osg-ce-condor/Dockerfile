@@ -1,6 +1,6 @@
 FROM base:latest
 ARG BASE_YUM_REPO=release
-LABEL maintainer "OSG Software <help@opensciencegrid.org>"
+LABEL maintainer "OSG Software <help@osg-htc.org>"
 LABEL name "osg-ce-condor"
 
 RUN yum install -y osg-ce-condor && \

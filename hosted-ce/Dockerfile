@@ -3,7 +3,7 @@
 #############
 
 FROM base:latest
-LABEL maintainer "OSG Software <help@opensciencegrid.org>"
+LABEL maintainer "OSG Software <help@osg-htc.org>"
 LABEL name "hosted-ce"
 
 ARG BASE_YUM_REPO=release
