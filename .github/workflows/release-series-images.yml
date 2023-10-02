@@ -33,11 +33,6 @@ jobs:
             os: 'el7'
           - name: '23'
             os: 'el9'
-        exclude:
-          - repo: 'testing'
-            osg_series: {name: '23', os: 'el9'}
-          - repo: 'release'
-            osg_series: {name: '23', os: 'el9'}
     steps:
 
     - uses: actions/checkout@v3
