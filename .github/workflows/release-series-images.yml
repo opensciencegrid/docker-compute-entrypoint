@@ -33,10 +33,10 @@ jobs:
             os: 'el7'
           - name: '23'
             os: 'el9'
+        # FIXME: disable OSG 23 dev until we have fixed the mash
+        # cache + signed RPMs issue in the prod repo
         exclude:
-          - repo: 'testing'
-            osg_series: {name: '23', os: 'el9'}
-          - repo: 'release'
+          - repo: 'development'
             osg_series: {name: '23', os: 'el9'}
     steps:
 
