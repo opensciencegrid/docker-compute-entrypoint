@@ -13,7 +13,7 @@ LABEL maintainer "OSG Software <help@osg-htc.org>"
 # previous args have gone out of scope
 ARG BASE_OS=el9
 ARG BASE_YUM_REPO=release
-ARG BASE_OSG_SERIES=3.6
+ARG BASE_OSG_SERIES=23
 
 # Ensure that the 'condor' UID/GID matches across containers
 RUN groupadd -g 64 -r condor && \
