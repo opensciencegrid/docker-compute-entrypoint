@@ -38,21 +38,19 @@ for user in $users; do
 done
 
 #kubernetes configmaps arent writeable
-stat /tmp/90-local.ini
-if [[ $? -eq 0 ]]; then
+if stat /tmp/90-local.ini; then
   cp /tmp/90-local.ini /etc/osg/config.d/90-local.ini
+  echo "Trying to populate hostname in 90-local.ini with a better value.."
+  pushd /etc/osg/config.d
+    if [[ -z "$_CONDOR_NETWORK_HOSTNAME" ]]; then
+      echo '$_CONDOR_NETWORK_HOSTNAME is empty, just using `hostname`'
+      sed -i "s/localhost/$(hostname)/" 90-local.ini
+    else
+      echo '$_CONDOR_NETWORK_HOSTNAME is nonempty, substituting it in..'
+      sed -i "s/localhost/$_CONDOR_NETWORK_HOSTNAME/" 90-local.ini
+    fi
+  popd
 fi
-
-echo "Trying to populate hostname in 90-local.ini with a better value.."
-pushd /etc/osg/config.d
-  if [[ -z "$_CONDOR_NETWORK_HOSTNAME" ]]; then
-    echo '$_CONDOR_NETWORK_HOSTNAME is empty, just using `hostname`'
-    sed -i "s/localhost/$(hostname)/" 90-local.ini
-  else
-    echo '$_CONDOR_NETWORK_HOSTNAME is nonempty, substituting it in..'
-    sed -i "s/localhost/$_CONDOR_NETWORK_HOSTNAME/" 90-local.ini
-  fi
-popd 
 
 echo "Running OSG configure.."
 # Run the OSG Configure script to set up bosco
