@@ -146,7 +146,10 @@ users=$(get_mapped_users)
 
 # Allow the condor user to run the WN client updater as the local users
 CONDOR_SUDO_FILE=/etc/sudoers.d/10-condor-ssh
-condor_sudo_users=`tr ' ' ',' <<< $users`
+# Replace spaces and newlines from sort ouput with commas
+condor_sudo_users=`tr ' \n' ',' <<< $users`
+# Remove trailing comma from list of sudo-users
+condor_sudo_users=${condor_sudo_users:0:-1}
 echo "condor ALL = ($condor_sudo_users) NOPASSWD: /usr/bin/update-remote-wn-client-override" \
       > $CONDOR_SUDO_FILE
 chmod 644 $CONDOR_SUDO_FILE
