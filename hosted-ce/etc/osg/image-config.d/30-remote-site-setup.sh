@@ -46,12 +46,9 @@ function fetch_remote_os_info {
 
 # Allow the condor user to run the WN client updater as the local users
 function setup_sudo_users {
-    users=$(get_mapped_users)
-    [[ -n $users ]] || errexit "Did not find any HTCondor-CE SCITOKENS user mappings"
-
     CONDOR_SUDO_FILE=/etc/sudoers.d/10-condor-ssh
     # Replace spaces and newlines from sort ouput with commas
-    condor_sudo_users=`tr ' \n' ',' <<< $users`
+    condor_sudo_users=`tr ' \n' ',' <<< $1`
     # Remove trailing comma from list of sudo-users
     condor_sudo_users=${condor_sudo_users:0:-1}
     echo "condor ALL = ($condor_sudo_users) NOPASSWD: /usr/bin/update-remote-wn-client-override" \
@@ -156,8 +153,11 @@ if [[ -n $BOSCO_GIT_ENDPOINT && -n $BOSCO_DIRECTORY ]]; then
 fi
 unset GIT_SSH_COMMAND
 
+users=$(get_mapped_users)
+[[ -n $users ]] || errexit "Did not find any HTCondor-CE SCITOKENS user mappings"
+
 # Setup sudoers.d file
-setup_sudo_users
+setup_sudo_users $users
 
 grep -qs '^OSG_GRID="/cvmfs/oasis.opensciencegrid.org/osg-software/osg-wn-client' \
      /var/lib/osg/osg-job-environment*.conf && SKIP_WN_INSTALL=yes
