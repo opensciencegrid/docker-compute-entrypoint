@@ -10,9 +10,7 @@ ARG BASE_YUM_REPO=release
 
 RUN yum install -y osg-ce-bosco \
                    htcondor-ce-view && \
-    rm -rf /var/cache/yum/ && \
-    # HACK: create missing /var/log/osg (SOFTWARE-5808) \
-    mkdir -p /var/log/osg
+    rm -rf /var/cache/yum/
 
 COPY etc/osg/image-config.d/ /etc/osg/image-config.d/
 

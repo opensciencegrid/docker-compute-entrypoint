@@ -18,7 +18,9 @@ ARG BASE_OSG_SERIES=23
 # Ensure that the 'condor' UID/GID matches across containers
 RUN groupadd -g 64 -r condor && \
     useradd -r -g condor -d /var/lib/condor -s /sbin/nologin \
-      -u 64 -c "Owner of HTCondor Daemons" condor
+      -u 64 -c "Owner of HTCondor Daemons" condor && \
+    # HACK: create missing /var/log/osg (SOFTWARE-5808) \
+    mkdir -p /var/log/osg /var/lib/osg /etc/osg
 
 # FIXME: Make sure that we have 10.4.2 installed with
 # JobRouter and condor remote submit bug fixes
