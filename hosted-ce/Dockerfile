@@ -22,6 +22,10 @@ COPY tmp/ /tmp
 # to allow for a faster dev -> ops turnaround
 COPY usr/bin/ /usr/bin
 
+# HTCONDOR-2322: Override CE defaults script to fix Environment setting bug.
+# Remove this once HTCondor-CE 23.0.8 is deployed for all hosted-ces.
+COPY usr/share/condor-ce/ /usr/share/condor-ce
+
 # Handle bosco_cluster -> condor_remote_cluster symlink
 RUN sed -i 's/bosco_cluster/condor_remote_cluster/g' /tmp/*.patch && \
     patch -d / -p0 < /tmp/ssh_q.patch && \
