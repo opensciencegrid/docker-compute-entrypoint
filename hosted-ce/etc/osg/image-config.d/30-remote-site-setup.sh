@@ -192,8 +192,13 @@ EOF
 for ruser in $users; do
     # Create new stanza for jump hosts
     if [[ -n $SSH_PROXY_JUMP ]]; then
-        extra_ssh_config="Match user \"$ruser\" host \"$remote_fqdn\"
+        if [[ -n $SSH_PROXY_JUMP_USER ]]; then
+            extra_ssh_config="Match user \"$ruser\" host \"$remote_fqdn\"
+ProxyJump $SSH_PROXY_JUMP_USER@$SSH_PROXY_JUMP"
+        else
+            extra_ssh_config="Match user \"$ruser\" host \"$remote_fqdn\"
 ProxyJump $ruser@$SSH_PROXY_JUMP"
+        fi
     fi
     setup_user_ssh "$ruser" "$remote_fqdn" "$remote_port" "$extra_ssh_config"
 done
