@@ -108,7 +108,9 @@ setup_endpoints_ini () {
     # configuration and remote copy. We need the absolute path
     # specifically for fetch-crl
     remote_home_dir=$(ssh -q "${ruser}@$remote_fqdn" pwd)
-    osg_ver=3.6
+    # This relies on the tarball-install/23 format (instead of tarball-install/23-main)
+    # on the OSG Yum repo
+    osg_ver=$(rpm -q osg-release --qf "%{VERSION}")
     cat <<EOF >> $ENDPOINT_CONFIG
 [Endpoint ${RESOURCE_NAME}-${ruser}]
 local_user = ${ruser}
