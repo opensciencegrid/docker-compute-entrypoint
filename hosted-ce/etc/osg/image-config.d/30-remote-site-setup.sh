@@ -113,7 +113,7 @@ setup_endpoints_ini () {
     osg_ver=$(rpm -q osg-release --qf "%{VERSION}")
     # HACK: OSG 23 does not support EL7, force the OSG 3.6 tarball
     # until we get guidance on EL7 support for remote sites (SOFTWARE-5880)
-    if [[ $osg_ver == "23" ]] && [[ $remote_os_major_ver == "7" ]]; then
+    if [[ $remote_os_major_ver == "7" ]]; then
         osg_ver="3.6"
     fi
     cat <<EOF >> $ENDPOINT_CONFIG
