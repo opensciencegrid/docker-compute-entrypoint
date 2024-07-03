@@ -29,8 +29,6 @@ jobs:
         repo: ['development', 'testing', 'release']
         image: ['hosted-ce', 'osg-ce-condor']
         osg_series:
-          - name: '3.6'
-            os: 'el9'
           - name: '23'
             os: 'el9'
     steps:
