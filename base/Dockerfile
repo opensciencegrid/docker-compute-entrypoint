@@ -22,14 +22,12 @@ RUN groupadd -g 64 -r condor && \
     # HACK: create missing /var/log/osg (SOFTWARE-5808) \
     mkdir -p /var/log/osg /var/lib/osg /etc/osg
 
-# FIXME: Make sure that we have 10.4.2 installed with
-# JobRouter and condor remote submit bug fixes
 RUN if [[ $BASE_YUM_REPO == 'release' ]]; then \
-        yum install -y --enablerepo=osg-upcoming-testing 'condor >= 10.4.2'; \
+        yum install -y --enablerepo=osg-upcoming-testing condor \
+                                                         htcondor-ce; \
     fi && \
     yum install -y osg-ce \
                    # FIXME: avoid htcondor-ce-collector conflict
-                   htcondor-ce \
                    git \
                    openssh-clients \
                    sudo \
