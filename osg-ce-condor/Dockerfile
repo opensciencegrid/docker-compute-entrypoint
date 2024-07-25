@@ -3,7 +3,11 @@ ARG BASE_YUM_REPO=release
 LABEL maintainer "OSG Software <help@osg-htc.org>"
 LABEL name "osg-ce-condor"
 
-RUN yum install -y osg-ce-condor && \
+RUN if [[ $BASE_YUM_REPO == 'release' ]]; then \
+        yum install -y --enablerepo=osg-upcoming-testing osg-ce-condor; \
+    else \
+        yum install -y osg-ce-condor; \
+    fi && \
     yum clean all && \
     rm -rf /var/cache/yum/
 
