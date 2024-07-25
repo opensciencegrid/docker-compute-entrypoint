@@ -8,11 +8,10 @@ LABEL name "hosted-ce"
 
 ARG BASE_YUM_REPO=release
 
-RUN yum install -y osg-ce-bosco && \
-    if [[ $BASE_YUM_REPO == 'release' ]]; then \
-        yum install -y --enablerepo=osg-upcoming-testing htcondor-ce-view; \
+RUN if [[ $BASE_YUM_REPO == 'release' ]]; then \
+        yum install -y --enablerepo=osg-upcoming-testing osg-ce-bosco htcondor-ce-view; \
     else \
-        yum install -y htcondor-ce-view; \
+        yum install -y osg-ce-bosco htcondor-ce-view; \
     fi && \
     rm -rf /var/cache/yum/
 
