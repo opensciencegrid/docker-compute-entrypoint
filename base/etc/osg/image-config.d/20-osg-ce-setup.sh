@@ -9,7 +9,8 @@ set -x
 # Ensure that PVC dirs and subdirs exist and have the proper
 # ownership (SOFTWARE-4423)
 user_log_dir=/var/log/condor-ce/user
-pvc_dirs=(/var/log/condor-ce/gratia
+pvc_dirs=(/etc/condor-ce/passwords.d
+          /var/log/condor-ce/gratia
            $user_log_dir
           /var/lib/condor-ce/execute
           /var/lib/condor-ce/gratia/data/
