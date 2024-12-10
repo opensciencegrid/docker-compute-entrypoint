@@ -7,9 +7,15 @@ LABEL maintainer "OSG Software <help@osg-htc.org>"
 LABEL name "hosted-ce"
 
 ARG BASE_YUM_REPO=release
+ARG BASE_OSG_SERIES=24
+
 
 RUN if [[ $BASE_YUM_REPO == 'release' ]]; then \
-        yum install -y --enablerepo=osg-upcoming-testing osg-ce-bosco htcondor-ce-view 'perl(filetest)'; \
+        if [[ $BASE_OSG_SERIES == '23' ]]; then \
+          yum install -y --enablerepo=osg-upcoming-testing osg-ce-bosco htcondor-ce-view 'perl(filetest)'; \
+        else \
+          yum install -y --enablerepo=osg-testing osg-ce-bosco htcondor-ce-view 'perl(filetest)'; \
+        fi \
     else \
         yum install -y osg-ce-bosco htcondor-ce-view 'perl(filetest)'; \
     fi && \
