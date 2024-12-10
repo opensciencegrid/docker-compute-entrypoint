@@ -31,8 +31,10 @@ jobs:
         osg_series:
           - name: '23'
             os: 'el9'
+            project: 'opensciencegrid'
           - name: '24'
             os: 'el9'
+            project: 'osg-htc'
     steps:
 
     - uses: actions/checkout@v3
@@ -69,9 +71,10 @@ jobs:
         REPO: ${{ matrix.repo }}
         IMAGE: ${{ matrix.image }}
         OSG_SERIES: ${{ matrix.osg_series.name }}
+        PROJECT: ${{ matrix.osg_series.project }}
         TIMESTAMP: ${{ needs.make-date-tag.outputs.dtag }}
       run: |
-        docker_repo=opensciencegrid/$IMAGE
+        docker_repo=$PROJECT/$IMAGE
         tag_list=()
         for registry in hub.opensciencegrid.org docker.io; do
           for image_tag in "$OSG_SERIES-$REPO" "$OSG_SERIES-$REPO-$TIMESTAMP"; do
@@ -96,5 +99,5 @@ jobs:
         context: ${{matrix.image}}
         build-args: |
           BASE_YUM_REPO=${{ matrix.repo }}
-          BASE_OSG_SERIES=${{ matrix.osg_series }}
+          BASE_OSG_SERIES=${{ matrix.osg_series.name }}
         tags: "${{ steps.generate-tag-list.outputs.taglist }}"

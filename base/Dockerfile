@@ -5,7 +5,7 @@
 # Specify the opensciencegrid/software-base image tag
 ARG BASE_OS=el9
 ARG BASE_YUM_REPO=release
-ARG BASE_OSG_SERIES=23
+ARG BASE_OSG_SERIES=24
 
 FROM opensciencegrid/software-base:$BASE_OSG_SERIES-$BASE_OS-$BASE_YUM_REPO
 LABEL maintainer "OSG Software <help@osg-htc.org>"
