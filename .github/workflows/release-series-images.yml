@@ -77,6 +77,9 @@ jobs:
         docker_repo=$PROJECT/$IMAGE
         tag_list=()
         for registry in hub.opensciencegrid.org docker.io; do
+          if [[ $registry == 'docker.io' && $PROJECT == 'osg-htc' ]]; then
+            continue
+          fi
           for image_tag in "$OSG_SERIES-$REPO" "$OSG_SERIES-$REPO-$TIMESTAMP"; do
             tag_list+=("$registry/$docker_repo":"$image_tag")
           done
