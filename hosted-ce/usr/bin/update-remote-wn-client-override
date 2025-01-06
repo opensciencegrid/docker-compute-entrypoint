@@ -252,7 +252,7 @@ def main():
     parser = OptionParser(usage="usage: %prog [options] remote_host", description=__doc__)
     parser.add_option(
         "--upstream-url",
-        default="https://repo.osg-htc.org/tarball-install/3.4/osg-wn-client-latest.el7.x86_64.tar.gz",
+        default="https://repo.osg-htc.org/tarball-install/24-main/osg-wn-client-latest.el9.x86_64.tar.gz",
         help="URL for the WN tarball file. [default: %default]",
     )
     parser.add_option("--remote-user", help="remote user to use for rsync and ssh")
