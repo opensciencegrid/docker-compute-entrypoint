@@ -122,7 +122,7 @@ local_user = ${ruser}
 remote_host = $remote_fqdn
 remote_user = ${ruser}
 remote_dir = $remote_home_dir/bosco-osg-wn-client
-upstream_url = https://repo.opensciencegrid.org/tarball-install/${osg_ver}/osg-wn-client-latest.el${remote_os_major_ver}.x86_64.tar.gz
+upstream_url = https://repo.osg-htc.org/tarball-install/${osg_ver}-main/osg-wn-client-latest.el${remote_os_major_ver}.x86_64.tar.gz
 EOF
 }
 
