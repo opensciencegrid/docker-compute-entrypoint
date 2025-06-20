@@ -42,7 +42,7 @@ done
 # the chart that dumps osg-configure config into /tmp/etc/osg/config.d/
 [[ -f /tmp/90-local.ini ]] && cp /tmp/90-local.ini /etc/osg/config.d/90-local.ini
 
-# Kubernetes configmaps arent writeable. Ideally we could just point osg-configure at another directory 
+# Kubernetes configmaps aren't writeable. Ideally we could just point osg-configure at another directory 
 [[ -d /tmp/etc/osg/config.d ]] && cp /tmp/etc/osg/config.d/*.ini /etc/osg/config.d/
 
 echo "Populating osg-configure hostname with a better value..."
