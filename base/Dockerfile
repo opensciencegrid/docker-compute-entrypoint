@@ -50,6 +50,7 @@ RUN CE_IDTOKEN_DIR=/usr/share/condor-ce/glidein-tokens; \
     mkdir -p "$CE_IDTOKEN_DIR" \
     && chown condor: "$CE_IDTOKEN_DIR"
 
-# do the bad thing of overwriting the existing cron job for fetch-crl
-COPY etc/cron.d/fetch-crl /etc/cron.d/fetch-crl
-RUN chmod 644 /etc/cron.d/fetch-crl
+# SOFTWARE-6149: auto-detect osg-configure changes
+# Also do the bad thing of overwriting the existing cron job for fetch-crl
+COPY etc/cron.d/* /etc/cron.d/
+RUN chmod 644 /etc/cron.d/*
