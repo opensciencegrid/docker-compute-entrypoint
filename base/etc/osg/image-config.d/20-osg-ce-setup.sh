@@ -48,7 +48,7 @@ done
 echo "Populating osg-configure hostname with a better value..."
 cat <<EOF >> "$(mktemp -p /etc/osg/config.d 95-hostname-override-XXX.conf)"
 [Site Information]
-host_name = ${_condor_NETWORK_HOSTNAME:-$(hostname)}
+host_name = ${_CONDOR_NETWORK_HOSTNAME:-${_condor_NETWORK_HOSTNAME:-$(hostname)}}
 EOF
 
 echo "Running OSG configure.."
