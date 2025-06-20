@@ -22,7 +22,7 @@ if [[ -z $cached_config_checksum ]]; then
     echo "$config_checksum" > "$cached_checksum_path"
 fi
 
-if [[ $config_checksum == $cached_config_checksum ]]; then
+if [[ $config_checksum == "$cached_config_checksum" ]]; then
     echoerr "No changes detected in $config_dir, exiting."
    exit 0
 fi
