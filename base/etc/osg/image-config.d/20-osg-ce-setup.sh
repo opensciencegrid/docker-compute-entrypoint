@@ -54,7 +54,7 @@ EOF
 echo "Running OSG configure.."
 # Run the OSG Configure script to set up bosco
 mkdir -p /var/cache/osg/
-cat /etc/osg/config.d/* | sha256sum > /var/cache/osg/config-sha256.txt
+sha256sum /etc/osg/config.d/* > /var/cache/osg/config-sha256.txt
 osg-configure -c --verbose VERBOSE
 
 # Cert stuff
