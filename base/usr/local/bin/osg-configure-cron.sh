@@ -4,7 +4,7 @@
 
 echoerr() { printf "%s\n" "$*" >&2; }
 
-if [[ $(ps -eo cmd | grep -q 'osg-configure -c') ]]; then
+if [[ $(ps -eo cmd | grep 'osg-configure -c' | grep -qv grep)  ]]; then
     echoerr "ERROR: osg-configure already running, exiting."
     exit 1
 fi
