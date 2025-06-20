@@ -38,23 +38,23 @@ for user in $users; do
     chown "$user": "$user_idtoken_dir"
 done
 
-#kubernetes configmaps arent writeable
-if stat /tmp/90-local.ini; then
-  cp /tmp/90-local.ini /etc/osg/config.d/90-local.ini
-  echo "Trying to populate hostname in 90-local.ini with a better value..."
-  pushd /etc/osg/config.d
-    if [[ -z "$_CONDOR_NETWORK_HOSTNAME" ]]; then
-      echo '$_CONDOR_NETWORK_HOSTNAME is empty, just using `hostname`'
-      sed -i "s/localhost/$(hostname)/" 90-local.ini
-    else
-      echo '$_CONDOR_NETWORK_HOSTNAME is nonempty, substituting it in...'
-      sed -i "s/localhost/$_CONDOR_NETWORK_HOSTNAME/" 90-local.ini
-    fi
-  popd
-fi
+# FIXME: this can be removed after all Hosted CEs have been updated to
+# the chart that dumps osg-configure config into /tmp/etc/osg/config.d/
+[[ -f /tmp/90-local.ini ]] && cp /tmp/90-local.ini /etc/osg/config.d/90-local.ini
+
+# Kubernetes configmaps aren't writeable. Ideally we could just point osg-configure at another directory 
+[[ -d /tmp/etc/osg/config.d ]] && cp /tmp/etc/osg/config.d/*.ini /etc/osg/config.d/
+
+echo "Populating osg-configure hostname with a better value..."
+cat <<EOF >> "$(mktemp -p /etc/osg/config.d 95-hostname-override-XXX.conf)"
+[Site Information]
+host_name = ${_CONDOR_NETWORK_HOSTNAME:-${_condor_NETWORK_HOSTNAME:-$(hostname)}}
+EOF
 
 echo "Running OSG configure.."
 # Run the OSG Configure script to set up bosco
+mkdir -p /var/cache/osg/
+cat /etc/osg/config.d/* | sha256sum > /var/cache/osg/config-sha256.txt
 osg-configure -c --verbose VERBOSE
 
 # Cert stuff
