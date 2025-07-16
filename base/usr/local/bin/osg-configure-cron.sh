@@ -29,3 +29,4 @@ fi
 
 cp "/tmp/$config_dir/*.ini" /etc/osg/config.d
 osg-configure -c
+condor_ce_reconfig
