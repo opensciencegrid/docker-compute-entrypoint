@@ -9,24 +9,26 @@ if [[ $(ps -eo cmd | grep 'osg-configure -c' | grep -qv grep)  ]]; then
     exit 1
 fi
 
-cached_checksum_dir=/var/cache/osg/
-cached_checksum_path=$cached_checksum_dir/config-sha256.txt
-
 config_dir=/etc/osg/config.d/
+configmap_config_dir="/tmp/$config_dir"
+
+# There may be other files dropped into the target dir so we set up a
+# temporary staging dir with the combined contents of the target +
+# updates from the ConfigMap
+staging_config_dir=$(mktemp -d)
+rsync -a "$config_dir/" "$staging_config_dir"
+rsync -a "$configmap_config_dir/" "$staging_config_dir"
+
 config_checksum=$(sha256sum "$config_dir/*")
-cached_config_checksum=$(cat "$cached_checksum_path" 2> /dev/null)
+staging_config_checksum=$(sha256sum "$staging_config_dir/*")
 
-if [[ -z $cached_config_checksum ]]; then
-    echoerr "WARNING: no existing config checksum found. Writing new checksum to '/var/cache/osg/config-sha256.txt'."
-    mkdir -p $cached_checksum_dir
-    echo "$config_checksum" > "$cached_checksum_path"
+if [[ $staging_config_checksum == "$config_checksum" ]]; then
+    echoerr "No changes detected in $configmap_config_dir, exiting."
+    [[ -d "$staging_config_dir" ]] && rm -rf "$staging_config_dir"
+    exit 0
 fi
 
-if [[ $config_checksum == "$cached_config_checksum" ]]; then
-    echoerr "No changes detected in $config_dir, exiting."
-   exit 0
-fi
-
-cp "/tmp/$config_dir/*.ini" /etc/osg/config.d
+# Perform an in-place replacement of the target dir
+rsync -a --delete "$staging_config_dir/" "$config_dir/"
 osg-configure -c
 condor_ce_reconfig
