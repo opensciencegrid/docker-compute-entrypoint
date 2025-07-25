@@ -32,3 +32,4 @@ fi
 rsync -a --delete "$staging_config_dir/" "$config_dir/"
 osg-configure -c
 condor_ce_reconfig
+rm -rf "$staging_config_dir"
