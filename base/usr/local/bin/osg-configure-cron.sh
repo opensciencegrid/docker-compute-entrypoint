@@ -31,6 +31,6 @@ fi
 
 # Perform an in-place replacement of the target dir
 rsync -a --delete "$staging_config_dir/" "$config_dir/"
-osg-configure -c
+/usr/sbin/osg-configure -c
 condor_ce_reconfig
 rm -rf "$staging_config_dir"
