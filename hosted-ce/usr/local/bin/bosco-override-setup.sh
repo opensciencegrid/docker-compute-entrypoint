@@ -12,7 +12,7 @@
 #     ...
 
 function errexit {
-    echo "$1" >&2
+    echo "$*" >&2
     exit 1
 }
 
@@ -51,5 +51,7 @@ git clone --depth=1 $GIT_ENDPOINT $REPO_DIR || errexit "Failed to clone $GIT_END
 # Bosco override dirs are expected in the following location in the git repo:
 #   <RESOURCE NAME>/bosco_override/
 RESOURCE_DIR="$REPO_DIR/$RESOURCE_NAME/"
-[[ -d $RESOURCE_DIR ]] || errexit "Could not find $RESOURCE_NAME/ under $GIT_ENDPOINT"
+[[ -d $RESOURCE_DIR ]] || errexit "Could not find $RESOURCE_NAME/ under $GIT_ENDPOINT;"\
+                                  "if this CE has no overrides, disable BoscoOverrides in the Helm chart"\
+                                  "or unset BOSCO_GIT_ENDPOINT"
 rsync -az "$RESOURCE_DIR/bosco_override/"  $OVERRIDE_DIR
