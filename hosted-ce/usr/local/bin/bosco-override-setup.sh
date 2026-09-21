@@ -28,7 +28,7 @@ if [[ $GIT_ENDPOINT =~ ^([A-Za-z0-9_-]+)@([^:]+): ]]; then
     GIT_HOST="${BASH_REMATCH[2]}"
     GIT_HOST_KEY=$(ssh-keyscan "$GIT_HOST")
     if [[ -n $GIT_HOST_KEY ]]; then
-        echo $GIT_HOST_KEY >> /etc/ssh/ssh_known_hosts
+        echo "$GIT_HOST_KEY" >> /etc/ssh/ssh_known_hosts
     else
         errexit "Failed to determine host key for $GIT_HOST"
     fi
