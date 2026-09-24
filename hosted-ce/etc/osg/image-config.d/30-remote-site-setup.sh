@@ -93,6 +93,13 @@ Match user "$remote_user"
   IdentityFile $ssh_key
   ${extra_config}
 EOF
+  else
+    # Set IdentityAgent to the forwarded yubikey agent for osg01 (etc)
+    cat << EOF >> /etc/ssh/ssh_config
+Match user "$remote_user"
+  IdentityAgent /etc/condor-ce/sshd-sock/auth-sock
+  ${extra_config}
+EOF
   fi
 
   chown -R "${ruser}": "$ssh_dir"
@@ -202,12 +209,20 @@ Host $remote_fqdn # remote login host
 EOF
 fi
 
+# Hack to make the forwarded SSH agent carry over to the bosco tools,
+# which run as root and spin off their own SSH agents by default
+identity_agent_config=""
+if [[ ${USE_SSH_AGENT_FORWARD:-false} == 'true' ]]; then
+    identity_agent_config="  IdentityAgent /etc/condor-ce/sshd-sock/auth-sock"
+fi
+
 cat <<EOF >> /etc/ssh/ssh_config
 
 Match localuser root
   ControlMaster auto
   ControlPath /tmp/cm-%i-%r@%h:%p
   ControlPersist  15m
+$identity_agent_config
 
 EOF
 
@@ -241,8 +256,12 @@ test_remote_connect () {
                 TARGET=$(ls $SSH_SOCK_DIR/ssh-*/*agent* | head -n1)
                 LINK=$SSH_SOCK_DIR/auth-sock
                 ln -s "$TARGET" "$LINK"
-                export SSH_AUTH_SOCK="$LINK"
-                echo "Got SSH_AUTH_SOCK: $LINK -> $TARGET"
+                
+                # Allow non-root users (eg. osg01) to read the auth sock
+                chmod 755 "$(dirname "$TARGET")"
+                chmod 666 "$TARGET"
+                
+                echo "Got auth-sock: $LINK -> $TARGET"
                 break
             else
                 echo "No auth socket found yet, retrying in 10 seconds..."
