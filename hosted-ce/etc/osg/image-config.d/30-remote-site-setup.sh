@@ -70,29 +70,30 @@ setup_user_ssh () {
   mkdir -p $ssh_dir
   chmod 700 $ssh_dir
 
-  # copy Bosco key
-#  ssh_key=$ssh_dir/id_rsa
-#  cp $BOSCO_KEY $ssh_key
-#  chmod 600 $ssh_key
-
-  # HACK: Symlink the Bosco key to the location expected by
-  # bosco_cluster so it doesn't go and try to generate a new one
-#  ln -s $ssh_key $ssh_dir/bosco_key.rsa
-
-  # copy Bosco certificate
-#  if [[ -f $BOSCO_CERT ]]; then
-#      ssh_cert=${ssh_key}-cert.pub
-#      cp $BOSCO_CERT $ssh_cert
-#      chmod 600 $ssh_cert
-#  fi
-
-  # Write user/host stanza to the global SSH config
-#   cat <<EOF >> /etc/ssh/ssh_config
-# Match user "$remote_user"
-#   IdentityFile $ssh_key
-#   ${extra_config}
-
-# EOF
+  # copy Bosco key if not using a forwarded agent
+  if [[ ${USE_SSH_AGENT_FORWARD:-false} != 'true' ]]; then
+    ssh_key=$ssh_dir/id_rsa
+    cp $BOSCO_KEY $ssh_key
+    chmod 600 $ssh_key
+    
+    # HACK: Symlink the Bosco key to the location expected by
+    # bosco_cluster so it doesn't go and try to generate a new one
+    ln -s $ssh_key $ssh_dir/bosco_key.rsa
+    
+    # copy Bosco certificate
+    if [[ -f $BOSCO_CERT ]]; then
+        ssh_cert=${ssh_key}-cert.pub
+        cp $BOSCO_CERT $ssh_cert
+        chmod 600 $ssh_cert
+    fi
+    
+    # Write user/host stanza to the global SSH config
+    cat << EOF >> /etc/ssh/ssh_config
+Match user "$remote_user"
+  IdentityFile $ssh_key
+  ${extra_config}
+EOF
+  fi
 
   chown -R "${ruser}": "$ssh_dir"
 
@@ -193,11 +194,15 @@ fi
 
 # Set up a control master for each rootly SSH connection
 # Add a sentinel to simplify awk in ssh-to-login-node
-cat <<EOF >> /etc/ssh/ssh_config
+if [[ ${USE_SSH_AGENT_FORWARD:-false} != 'true' ]]; then
+    cat <<EOF >> /etc/ssh/ssh_config
+Host $remote_fqdn # remote login host
+  Port $remote_port
+  IdentitiesOnly yes
+EOF
+fi
 
-# Host $remote_fqdn # remote login host
-#   Port $remote_port
-#   IdentitiesOnly yes
+cat <<EOF >> /etc/ssh/ssh_config
 
 Match localuser root
   ControlMaster auto
@@ -226,23 +231,25 @@ done
 ###################
 
 test_remote_connect () {
-    # Wait for an SSH agent forwarding socket to be established before attempting SSH
-    echo "Waiting for SSH agent forwarding to be established..."
-    MAX_RETRIES=100
-    SSH_SOCK_DIR=/etc/condor-ce/sshd-sock
-    for _ in $(seq 1 $MAX_RETRIES); do
-        if ls $SSH_SOCK_DIR | grep 'ssh-' ; then
-            TARGET=$(ls $SSH_SOCK_DIR/ssh-*/*agent* | head -n1)
-            LINK=$SSH_SOCK_DIR/auth-sock
-            ln -s "$TARGET" "$LINK"
-            export SSH_AUTH_SOCK="$LINK"
-            echo "Got SSH_AUTH_SOCK: $LINK -> $TARGET"
-            break
-        else
-            echo "No auth socket found yet, retrying in 10 seconds..."
-            sleep 10
-        fi
-    done
+    if [[ ${USE_SSH_AGENT_FORWARD:-false} == 'true' ]]; then
+        # Wait for an SSH agent forwarding socket to be established before attempting SSH
+        echo "Waiting for SSH agent forwarding to be established..."
+        MAX_RETRIES=100
+        SSH_SOCK_DIR=/etc/condor-ce/sshd-sock
+        for _ in $(seq 1 $MAX_RETRIES); do
+            if ls $SSH_SOCK_DIR | grep 'ssh-' ; then
+                TARGET=$(ls $SSH_SOCK_DIR/ssh-*/*agent* | head -n1)
+                LINK=$SSH_SOCK_DIR/auth-sock
+                ln -s "$TARGET" "$LINK"
+                export SSH_AUTH_SOCK="$LINK"
+                echo "Got SSH_AUTH_SOCK: $LINK -> $TARGET"
+                break
+            else
+                echo "No auth socket found yet, retrying in 10 seconds..."
+                sleep 10
+            fi
+        done
+    fi
 
     ssh -vvv "$1@$2" true
 }

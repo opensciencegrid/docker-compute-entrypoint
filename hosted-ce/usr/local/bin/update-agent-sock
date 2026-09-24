@@ -21,4 +21,8 @@ poll_ssh_auth_sock() {
     
 }
 
-poll_ssh_auth_sock
+if [[ ${USE_SSH_AGENT_FORWARD:-false} == 'true' ]]; then
+    poll_ssh_auth_sock
+else
+    sleep infinity
+fi
