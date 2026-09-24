@@ -70,28 +70,37 @@ setup_user_ssh () {
   mkdir -p $ssh_dir
   chmod 700 $ssh_dir
 
-  # copy Bosco key
-  ssh_key=$ssh_dir/id_rsa
-  cp $BOSCO_KEY $ssh_key
-  chmod 600 $ssh_key
-  # HACK: Symlink the Bosco key to the location expected by
-  # bosco_cluster so it doesn't go and try to generate a new one
-  ln -s $ssh_key $ssh_dir/bosco_key.rsa
-
-  # copy Bosco certificate
-  if [[ -f $BOSCO_CERT ]]; then
-      ssh_cert=${ssh_key}-cert.pub
-      cp $BOSCO_CERT $ssh_cert
-      chmod 600 $ssh_cert
-  fi
-
-  # Write user/host stanza to the global SSH config
-  cat <<EOF >> /etc/ssh/ssh_config
+  # copy Bosco key if not using a forwarded agent
+  if [[ ${USE_SSH_AGENT_FORWARD:-false} != 'true' ]]; then
+    ssh_key=$ssh_dir/id_rsa
+    cp $BOSCO_KEY $ssh_key
+    chmod 600 $ssh_key
+    
+    # HACK: Symlink the Bosco key to the location expected by
+    # bosco_cluster so it doesn't go and try to generate a new one
+    ln -s $ssh_key $ssh_dir/bosco_key.rsa
+    
+    # copy Bosco certificate
+    if [[ -f $BOSCO_CERT ]]; then
+        ssh_cert=${ssh_key}-cert.pub
+        cp $BOSCO_CERT $ssh_cert
+        chmod 600 $ssh_cert
+    fi
+    
+    # Write user/host stanza to the global SSH config
+    cat << EOF >> /etc/ssh/ssh_config
 Match user "$remote_user"
   IdentityFile $ssh_key
   ${extra_config}
-
 EOF
+  else
+    # Set IdentityAgent to the forwarded yubikey agent for osg01 (etc)
+    cat << EOF >> /etc/ssh/ssh_config
+Match user "$remote_user"
+  IdentityAgent /etc/condor-ce/sshd-sock/auth-sock
+  ${extra_config}
+EOF
+  fi
 
   chown -R "${ruser}": "$ssh_dir"
 
@@ -192,16 +201,28 @@ fi
 
 # Set up a control master for each rootly SSH connection
 # Add a sentinel to simplify awk in ssh-to-login-node
-cat <<EOF >> /etc/ssh/ssh_config
-
+if [[ ${USE_SSH_AGENT_FORWARD:-false} != 'true' ]]; then
+    cat <<EOF >> /etc/ssh/ssh_config
 Host $remote_fqdn # remote login host
   Port $remote_port
   IdentitiesOnly yes
+EOF
+fi
+
+# Hack to make the forwarded SSH agent carry over to the bosco tools,
+# which run as root and spin off their own SSH agents by default
+identity_agent_config=""
+if [[ ${USE_SSH_AGENT_FORWARD:-false} == 'true' ]]; then
+    identity_agent_config="  IdentityAgent /etc/condor-ce/sshd-sock/auth-sock"
+fi
+
+cat <<EOF >> /etc/ssh/ssh_config
 
 Match localuser root
   ControlMaster auto
   ControlPath /tmp/cm-%i-%r@%h:%p
   ControlPersist  15m
+$identity_agent_config
 
 EOF
 
@@ -225,6 +246,30 @@ done
 ###################
 
 test_remote_connect () {
+    if [[ ${USE_SSH_AGENT_FORWARD:-false} == 'true' ]]; then
+        # Wait for an SSH agent forwarding socket to be established before attempting SSH
+        echo "Waiting for SSH agent forwarding to be established..."
+        MAX_RETRIES=100
+        SSH_SOCK_DIR=/etc/condor-ce/sshd-sock
+        for _ in $(seq 1 $MAX_RETRIES); do
+            if ls $SSH_SOCK_DIR | grep 'ssh-' ; then
+                TARGET=$(ls $SSH_SOCK_DIR/ssh-*/*agent* | head -n1)
+                LINK=$SSH_SOCK_DIR/auth-sock
+                ln -s "$TARGET" "$LINK"
+                
+                # Allow non-root users (eg. osg01) to read the auth sock
+                chmod 755 "$(dirname "$TARGET")"
+                chmod 666 "$TARGET"
+                
+                echo "Got auth-sock: $LINK -> $TARGET"
+                break
+            else
+                echo "No auth socket found yet, retrying in 10 seconds..."
+                sleep 10
+            fi
+        done
+    fi
+
     ssh -vvv "$1@$2" true
 }
 

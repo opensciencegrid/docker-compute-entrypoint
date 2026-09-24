@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# Util script to update the symlink to the SSH agent socket that
+# condor_ce uses to access the remote cluster login host
+
+SSH_SOCK_DIR=/etc/condor-ce/sshd-sock
+
+poll_ssh_auth_sock() {
+    echo "Polling SSH agent socket..."
+    while true; do
+        if ls $SSH_SOCK_DIR | grep 'ssh-' ; then
+            TARGET=$(ls $SSH_SOCK_DIR/ssh-*/*agent* | head -n1)
+            LINK=$SSH_SOCK_DIR/auth-sock
+            ln -sf "$TARGET" "$LINK"
+            
+            # Allow non-root users (eg. osg01) to read the auth sock
+            chmod 755 "$(dirname "$TARGET")"
+            chmod 666 "$TARGET"
+            echo "Updating SSH_AUTH_SOCK: $LINK -> $TARGET. Checking again in 10 seconds..."
+        else
+            echo "No auth socket found yet, retrying in 10 seconds..."
+        fi
+        sleep 10
+    done
+    
+}
+
+if [[ ${USE_SSH_AGENT_FORWARD:-false} == 'true' ]]; then
+    poll_ssh_auth_sock
+else
+    sleep infinity
+fi
