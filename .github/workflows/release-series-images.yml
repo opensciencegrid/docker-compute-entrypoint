@@ -35,6 +35,9 @@ jobs:
           - name: '25'
             os: 'el9'
             project: 'osg-htc'
+          - name: '26'
+            os: 'el9'
+            project: 'osg-htc'
     steps:
 
     - uses: actions/checkout@v3
