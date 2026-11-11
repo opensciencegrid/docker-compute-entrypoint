@@ -34,3 +34,4 @@ RUN sed -i 's/bosco_cluster/condor_remote_cluster/g' /tmp/*.patch && \
 
 
 COPY usr/local/bin /usr/local/bin
+COPY etc/supervisord.d/* /etc/supervisord.d/
