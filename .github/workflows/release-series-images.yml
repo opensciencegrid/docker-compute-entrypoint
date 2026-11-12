@@ -29,9 +29,6 @@ jobs:
         repo: ['development', 'testing', 'release']
         image: ['hosted-ce', 'osg-ce-condor']
         osg_series:
-          - name: '24'
-            os: 'el9'
-            project: 'osg-htc'
           - name: '25'
             os: 'el9'
             project: 'osg-htc'
